@@ -29,7 +29,7 @@ public void pit() throws Exception {
 
 ```
 
-- [View Examples](https://github.com/rife2/bld-pittest/blob/master/examples/src/bld/java/com/example/)
+- [View Examples](https://github.com/rife2/bld-pitest/blob/master/examples/src/bld/java/com/example/)
 
 Please check the [PitestOperation documentation](https://rife2.github.io/bld-pitest/rife/bld/extension/PitestOperation.html#method-summary) for all available configuration options.
 
