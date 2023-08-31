@@ -21,9 +21,13 @@ import rife.bld.BaseProject;
 import rife.bld.Project;
 import rife.bld.WebProject;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static rife.bld.extension.PitestOperation.*;
 
 class PitestOperationTest {
@@ -109,8 +113,8 @@ class PitestOperationTest {
 
         op = new PitestOperation()
                 .fromProject(new Project())
-                .excludedClasses(List.of(FOO, BAR));
-        assertThat(op.options.get("--excludedClasses")).as(AS_LIST).isEqualTo(FOOBAR);
+                .excludedClasses(Set.of(FOO, BAR));
+        assertThat(op.options.get("--excludedClasses")).as("as set").contains(FOO).contains(BAR).contains(",");
     }
 
     @Test
@@ -149,7 +153,24 @@ class PitestOperationTest {
         op = new PitestOperation()
                 .fromProject(new Project())
                 .excludedTests(List.of(FOO, BAR));
-        assertThat(op.options.get("--excludedTests")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options.get("--excludedTests")).as("as list").isEqualTo(FOOBAR);
+    }
+
+    @Test
+    void execute() throws IOException {
+        var tmpDir = Files.createTempDirectory("bld-pitest");
+        tmpDir.toFile().deleteOnExit();
+        var op = new PitestOperation().
+                fromProject(new WebProject())
+                .reportDir(tmpDir.toAbsolutePath().toString())
+                .targetClasses("com.example.*")
+                .targetTests("com.example.*")
+                .verbose(true)
+                .failWhenNoMutations(false)
+                .sourceDirs("examples/src");
+
+        assertThatCode(op::execute).doesNotThrowAnyException();
+        assertThat(tmpDir).isEmptyDirectory();
     }
 
     @Test
