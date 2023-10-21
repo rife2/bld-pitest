@@ -605,7 +605,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     /**
      * The classes to be mutated. This is expressed as a list of globs.
      * <p>
-     * For example
+     * For example:
      * <p><ul>
      * <li>{@code com.myompany.*}</li>
      * <li>{@code com.mycompany.package.*, com.mycompany.packageB.Foo, com.partner.*}</li>

@@ -42,15 +42,17 @@ public class PitestOperationBuild extends Project {
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
+        var pitest = version(1, 15, 1);
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 2)));
+                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 5)));
         scope(test)
-                .include(dependency("org.pitest", "pitest", version(1, 14, 4)))
-                .include(dependency("org.pitest", "pitest-command-line", version(1, 14, 4)))
+                .include(dependency("org.pitest", "pitest", pitest))
+                .include(dependency("org.pitest", "pitest-command-line", pitest))
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1,2, 0)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 0)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 0)))
-                .include(dependency("org.assertj:assertj-joda-time:2.2.0"));
+                .include(dependency("org.assertj", "assertj-core", version(3, 24, 2)));
+        
         javadocOperation()
                 .javadocOptions()
                 .docLint(NO_MISSING)

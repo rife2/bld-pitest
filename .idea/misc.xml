@@ -8,9 +8,8 @@
   <component name="PDMPlugin">
     <option name="customRuleSets">
       <list>
-        <option value="K:\java\semver\config\pmd.xml" />
-        <option value="$PROJECT_DIR$/../bld-pmd/config/pmd.xml" />
-        <option value="$PROJECT_DIR$/../bld-checkstyle/config/pmd.xml" />
+        <option value="$PROJECT_DIR$/config/pmd.xml" />
+        <option value="$PROJECT_DIR$/../bld-jacoco-report/config/pmd.xml" />
       </list>
     </option>
     <option name="skipTestSources" value="false" />
