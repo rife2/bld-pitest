@@ -10,6 +10,11 @@
       <list>
         <option value="$PROJECT_DIR$/config/pmd.xml" />
         <option value="$PROJECT_DIR$/../bld-jacoco-report/config/pmd.xml" />
+        <option value="K:\java\semver\config\pmd.xml" />
+        <option value="$PROJECT_DIR$/../bld-checkstyle/config/pmd.xml" />
+        <option value="$PROJECT_DIR$/../bld-exec/config/pmd.xml" />
+        <option value="$PROJECT_DIR$/../bld-testng/config/pmd.xml" />
+        <option value="$PROJECT_DIR$/../bld-generated-version/config/pmd.xml" />
       </list>
     </option>
     <option name="skipTestSources" value="false" />
