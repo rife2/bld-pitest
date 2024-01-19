@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the original author or authors.
+ * Copyright 2023-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(0, 9, 1);
+        version = version(0, 9, 2, "SNAPSHOT");
 
         javaRelease = 17;
         downloadSources = true;
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var pitest = version(1, 15, 3);
+        var pitest = version(1, 15, 4);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 5)));
         scope(test)
@@ -51,7 +51,7 @@ public class PitestOperationBuild extends Project {
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 1)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 1)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 1)))
-                .include(dependency("org.assertj", "assertj-core", version(3, 24, 2)));
+                .include(dependency("org.assertj", "assertj-core", version(3, 25, 1)));
 
         javadocOperation()
                 .javadocOptions()
