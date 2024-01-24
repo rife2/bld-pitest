@@ -42,7 +42,7 @@ public class PitestOperationBuild extends Project {
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var pitest = version(1, 15, 4);
+        var pitest = version(1, 15, 6);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 5)));
         scope(test)
