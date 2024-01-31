@@ -44,14 +44,14 @@ public class PitestOperationBuild extends Project {
 
         var pitest = version(1, 15, 6);
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 5)));
+                .include(dependency("com.uwyn.rife2", "bld", version(1, 8, 0)));
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 1)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 1)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 1)))
-                .include(dependency("org.assertj", "assertj-core", version(3, 25, 1)));
+                .include(dependency("org.assertj", "assertj-core", version(3, 25, 2)));
 
         javadocOperation()
                 .javadocOptions()
