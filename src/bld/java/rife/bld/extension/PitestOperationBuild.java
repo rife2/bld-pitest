@@ -35,23 +35,23 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(0, 9, 2);
+        version = version(0, 9, 3);
 
         javaRelease = 17;
         downloadSources = true;
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var pitest = version(1, 15, 6);
+        var pitest = version(1, 15, 7);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(1, 8, 0)));
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 1)))
-                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 1)))
-                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 1)))
-                .include(dependency("org.assertj", "assertj-core", version(3, 25, 2)));
+                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 2)))
+                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 2)))
+                .include(dependency("org.assertj", "assertj-core", version(3, 25, 3)));
 
         javadocOperation()
                 .javadocOptions()
