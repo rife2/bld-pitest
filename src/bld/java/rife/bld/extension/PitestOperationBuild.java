@@ -35,14 +35,14 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(0, 9, 3);
+        version = version(0, 9, 4);
 
         javaRelease = 17;
         downloadSources = true;
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var pitest = version(1, 15, 7);
+        var pitest = version(1, 15, 8);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(1, 8, 0)));
         scope(test)
