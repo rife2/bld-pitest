@@ -35,7 +35,7 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(0, 9, 4);
+        version = version(0, 9, 5);
 
         javaRelease = 17;
         downloadSources = true;
@@ -44,7 +44,7 @@ public class PitestOperationBuild extends Project {
 
         var pitest = version(1, 15, 8);
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "bld", version(1, 8, 0)));
+                .include(dependency("com.uwyn.rife2", "bld", version(1, 9, 0)));
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
