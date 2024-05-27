@@ -58,7 +58,7 @@ class PitestOperationTest {
     }
 
     @Test
-    void checkAll() {
+    void checkAllParameters() {
         var params = List.of(
                 "--argLine",
                 "--avoidCallsTo",
