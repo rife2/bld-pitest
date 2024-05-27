@@ -595,6 +595,17 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     /**
      * Maximum number of surviving mutants to allow without throwing an error.
      *
+     * @param maxMutationsPerClass the max number
+     * @return this operation instance
+     */
+    public PitestOperation maxMutationsPerClass(int maxMutationsPerClass) {
+        options.put("--maxMutationsPerClass", String.valueOf(maxMutationsPerClass));
+        return this;
+    }
+
+    /**
+     * Maximum number of surviving mutants to allow without throwing an error.
+     *
      * @param maxSurviving the maximin number
      * @return this operation instance
      */

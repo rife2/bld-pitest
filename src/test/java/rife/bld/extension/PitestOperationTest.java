@@ -77,12 +77,13 @@ class PitestOperationTest {
                 "--fullMutationMatrix",
                 "--historyInputLocation",
                 "--historyOutputLocation",
-                "--includeLaunchClasspath",
                 "--includedGroups",
                 "--includedTestMethods",
+                "--includeLaunchClasspath",
                 "--inputEncoding",
                 "--jvmArgs",
                 "--jvmPath",
+                "--maxMutationsPerClass",
                 "--maxSurviving",
                 "--mutableCodePaths",
                 "--mutationEngine",
@@ -122,8 +123,8 @@ class PitestOperationTest {
                 .excludedGroups(List.of(FOO, BAR))
                 .excludedMethods("method")
                 .excludedMethods(List.of(FOO, BAR))
-                .excludedTestClasses("test")
                 .excludedRunners("runners")
+                .excludedTestClasses("test")
                 .exportLineCoverage(true)
                 .failWhenNoMutations(true)
                 .features("feature")
@@ -136,6 +137,7 @@ class PitestOperationTest {
                 .inputEncoding("encoding")
                 .jvmArgs("-XX:+UnlogregckDiagnosticVMOptions")
                 .jvmPath("path")
+                .maxMutationsPerClass(3)
                 .maxSurviving(1)
                 .mutableCodePaths("codePaths")
                 .mutationEngine("engine")
@@ -454,6 +456,14 @@ class PitestOperationTest {
                 .fromProject(new BaseProject())
                 .jvmPath(FOO);
         assertThat(op.options.get("--jvmPath")).isEqualTo(FOO);
+    }
+
+    @Test
+    void maxMutationsPerClass() {
+        var op = new PitestOperation()
+                .fromProject(new BaseProject())
+                .maxMutationsPerClass(12);
+        assertThat(op.options.get("--maxMutationsPerClass")).isEqualTo("12");
     }
 
     @Test
