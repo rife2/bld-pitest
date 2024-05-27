@@ -35,7 +35,7 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(0, 9, 7);
+        version = version(0, 9, 8, "SNAPSHOT");
 
         javaRelease = 17;
         downloadSources = true;
@@ -51,7 +51,7 @@ public class PitestOperationBuild extends Project {
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 1)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 2)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 2)))
-                .include(dependency("org.assertj", "assertj-core", version(3, 25, 3)));
+                .include(dependency("org.assertj", "assertj-core", version(3, 26, 0)));
 
         javadocOperation()
                 .javadocOptions()

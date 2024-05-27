@@ -58,6 +58,121 @@ class PitestOperationTest {
     }
 
     @Test
+    void checkAll() {
+        var params = List.of(
+                "--argLine",
+                "--avoidCallsTo",
+                "--classPath",
+                "--classPathFile",
+                "--coverageThreshold",
+                "--detectInlinedCode",
+                "--excludedClasses",
+                "--excludedGroups",
+                "--excludedMethods",
+                "--excludedRunners",
+                "--excludedTestClasses",
+                "--exportLineCoverage",
+                "--failWhenNoMutations",
+                "--features",
+                "--fullMutationMatrix",
+                "--historyInputLocation",
+                "--historyOutputLocation",
+                "--includeLaunchClasspath",
+                "--includedGroups",
+                "--includedTestMethods",
+                "--inputEncoding",
+                "--jvmArgs",
+                "--jvmPath",
+                "--maxSurviving",
+                "--mutableCodePaths",
+                "--mutationEngine",
+                "--mutationThreshold",
+                "--mutationUnitSize",
+                "--mutators",
+                "--outputEncoding",
+                "--outputFormats",
+                "--pluginConfiguration",
+                "--projectBase",
+                "--reportDir",
+                "--skipFailingTests",
+                "--sourceDirs",
+                "--targetClasses",
+                "--targetTests",
+                "--testStrengthThreshold",
+                "--threads",
+                "--timeoutConst",
+                "--timeoutFactor",
+                "--timestampedReports",
+                "--useClasspathJar",
+                "--verbose",
+                "--verbosity"
+        );
+
+        var args = new PitestOperation()
+                .fromProject(new BaseProject())
+                .argLine(FOO)
+                .avoidCallsTo(FOO, BAR)
+                .classPath(FOO, BAR)
+                .classPathFile(FOO)
+                .coverageThreshold(0)
+                .detectInlinedCode(false)
+                .excludedClasses("class")
+                .excludedClasses(List.of(FOO, BAR))
+                .excludedGroups("group")
+                .excludedGroups(List.of(FOO, BAR))
+                .excludedMethods("method")
+                .excludedMethods(List.of(FOO, BAR))
+                .excludedTestClasses("test")
+                .excludedRunners("runners")
+                .exportLineCoverage(true)
+                .failWhenNoMutations(true)
+                .features("feature")
+                .fullMutationMatrix(true)
+                .historyInputLocation("inputLocation")
+                .historyOutputLocation("outputLocation")
+                .includeLaunchClasspath(true)
+                .includedGroups("group")
+                .includedTestMethods("method")
+                .inputEncoding("encoding")
+                .jvmArgs("-XX:+UnlogregckDiagnosticVMOptions")
+                .jvmPath("path")
+                .maxSurviving(1)
+                .mutableCodePaths("codePaths")
+                .mutationEngine("engine")
+                .mutationThreshold(0)
+                .mutationUnitSize(1)
+                .mutators(List.of(FOO, BAR))
+                .outputEncoding("encoding")
+                .outputFormats("json")
+                .pluginConfiguration("key", "value")
+                .projectBase("base")
+                .reportDir("dir")
+                .skipFailingTests(true)
+                .targetClasses("class")
+                .targetTests("test")
+                .testStrengthThreshold(0)
+                .threads(0)
+                .timeoutConst(0)
+                .timeoutFactor(0)
+                .timestampedReports(true)
+                .useClasspathJar(true)
+                .verbose(true)
+                .verbosity("default")
+                .executeConstructProcessCommandList();
+
+        for (var p : params) {
+            var found = false;
+            for (var a : args) {
+                if (a.startsWith(p)) {
+                    found = true;
+                    break;
+                }
+            }
+            assertThat(found).as(p + " not found.").isTrue();
+        }
+    }
+
+    @Test
     void classPath() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
@@ -144,16 +259,24 @@ class PitestOperationTest {
     }
 
     @Test
+    void excludedRunners() {
+        var op = new PitestOperation()
+                .fromProject(new BaseProject())
+                .excludedRunners(FOO);
+        assertThat(op.options.get("--excludedRunners")).isEqualTo(FOO);
+    }
+
+    @Test
     void excludedTests() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
-                .excludedTests(FOO, BAR);
-        assertThat(op.options.get("--excludedTests")).isEqualTo(FOOBAR);
+                .excludedTestClasses(FOO, BAR);
+        assertThat(op.options.get("--excludedTestClasses")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
-                .excludedTests(List.of(FOO, BAR));
-        assertThat(op.options.get("--excludedTests")).as("as list").isEqualTo(FOOBAR);
+                .excludedTestClasses(List.of(FOO, BAR));
+        assertThat(op.options.get("--excludedTestClasses")).as("as list").isEqualTo(FOOBAR);
     }
 
     @Test
@@ -247,6 +370,14 @@ class PitestOperationTest {
     }
 
     @Test
+    void fullMutationMatrix() {
+        var op = new PitestOperation()
+                .fromProject(new BaseProject())
+                .fullMutationMatrix(true);
+        assertThat(op.options.get("--fullMutationMatrix")).isEqualTo(TRUE);
+    }
+
+    @Test
     void historyInputLocation() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
@@ -289,6 +420,22 @@ class PitestOperationTest {
     }
 
     @Test
+    void includedTestMethods() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .includedTestMethods(FOO);
+        assertThat(op.options.get("--includedTestMethods")).isEqualTo(FOO);
+    }
+
+    @Test
+    void inputEncoding() {
+        var op = new PitestOperation()
+                .fromProject(new BaseProject())
+                .inputEncoding(FOO);
+        assertThat(op.options.get("--inputEncoding")).isEqualTo(FOO);
+    }
+
+    @Test
     void jvmArgs() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
@@ -310,6 +457,14 @@ class PitestOperationTest {
     }
 
     @Test
+    void maxSurviving() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .maxSurviving(1);
+        assertThat(op.options.get("--maxSurviving")).isEqualTo("1");
+    }
+
+    @Test
     void mutableCodePaths() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
@@ -323,6 +478,14 @@ class PitestOperationTest {
     }
 
     @Test
+    void mutationEngine() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .mutationEngine(FOO);
+        assertThat(op.options.get("--mutationEngine")).isEqualTo(FOO);
+    }
+
+    @Test
     void mutationThreshold() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
@@ -333,6 +496,14 @@ class PitestOperationTest {
                 .fromProject(new BaseProject())
                 .mutationThreshold(101);
         assertThat(op.options.get("--mutationThreshold")).isNull();
+    }
+
+    @Test
+    void mutationUnitSize() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .mutationUnitSize(2);
+        assertThat(op.options.get("--mutationUnitSize")).isEqualTo("2");
     }
 
     @Test
@@ -367,6 +538,22 @@ class PitestOperationTest {
                 .fromProject(new Project())
                 .outputFormats(List.of(FOO, BAR));
         assertThat(op.options.get("--outputFormats")).as(AS_LIST).isEqualTo(FOOBAR);
+    }
+
+    @Test
+    void pluginConfiguration() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .pluginConfiguration(FOO, BAR);
+        assertThat(op.options.get("--pluginConfiguration")).isEqualTo(FOO + "=" + BAR);
+    }
+
+    @Test
+    void projectBase() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .projectBase(FOO);
+        assertThat(op.options.get("--projectBase")).isEqualTo(FOO);
     }
 
     @Test
@@ -430,6 +617,14 @@ class PitestOperationTest {
     }
 
     @Test
+    void testStrengthThreshold() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .testStrengthThreshold(6);
+        assertThat(op.options.get("--testStrengthThreshold")).isEqualTo("6");
+    }
+
+    @Test
     void threads() {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
@@ -490,5 +685,13 @@ class PitestOperationTest {
                 .fromProject(new Project())
                 .verbose(false);
         assertThat(op.options.get("--verbose")).isEqualTo(FALSE);
+    }
+
+    @Test
+    void verbosity() {
+        var op = new PitestOperation()
+                .fromProject(new Project())
+                .verbosity(FOO);
+        assertThat(op.options.get("--verbosity")).isEqualTo(FOO);
     }
 }

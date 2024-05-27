@@ -293,15 +293,13 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
-     * List of globs to match against test class names. Matching tests will not be run (note if a test suite includes
-     * an excluded class, then it will “leak” back in).
+     * JUnit4 runners to exclude.
      *
-     * @param excludedTest one ore more excluded tests
+     * @param runners the runners
      * @return this operation instance
-     * @see #excludedTests(Collection)
      */
-    public PitestOperation excludedTests(String... excludedTest) {
-        options.put("--excludedTests", String.join(",", excludedTest));
+    public PitestOperation excludedRunners(String runners) {
+        options.put("--excludedRunners", runners);
         return this;
     }
 
@@ -309,13 +307,26 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * List of globs to match against test class names. Matching tests will not be run (note if a test suite includes
      * an excluded class, then it will “leak” back in).
      *
-     * @param excludedTests the excluded tests
+     * @param testClasses one or more excluded tests
      * @return this operation instance
-     * @see #excludedTests(String...)
+     * @see #excludedTestClasses(Collection)
      */
-    public PitestOperation excludedTests(Collection<String> excludedTests) {
-        options.put("--excludedTests",
-                String.join(",", excludedTests.stream().filter(this::isNotBlank).toList()));
+    public PitestOperation excludedTestClasses(String... testClasses) {
+        options.put("--excludedTestClasses", String.join(",", testClasses));
+        return this;
+    }
+
+    /**
+     * List of globs to match against test class names. Matching tests will not be run (note if a test suite includes
+     * an excluded class, then it will “leak” back in).
+     *
+     * @param testClasses the excluded tests
+     * @return this operation instance
+     * @see #excludedTestClasses(String...)
+     */
+    public PitestOperation excludedTestClasses(Collection<String> testClasses) {
+        options.put("--excludedTestClasses",
+                String.join(",", testClasses.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -421,6 +432,21 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Whether to create a full mutation matrix
+     *
+     * @param isFullMutationMatrix {@code true} or {@code false}
+     * @return this operation instance
+     */
+    public PitestOperation fullMutationMatrix(boolean isFullMutationMatrix) {
+        if (isFullMutationMatrix) {
+            options.put("--fullMutationMatrix", TRUE);
+        } else {
+            options.put("--fullMutationMatrix", FALSE);
+        }
+        return this;
+    }
+
+    /**
      * Path to a file containing history information for incremental analysis.
      *
      * @param path the path
@@ -493,6 +519,32 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         return this;
     }
 
+    /**
+     * Test methods that should be included for challenging the mutants.
+     *
+     * @param testMethod the test method
+     * @return this operation instance
+     */
+    public PitestOperation includedTestMethods(String testMethod) {
+        options.put("--includedTestMethods", testMethod);
+        return this;
+    }
+
+    /**
+     * Input encoding.
+     * <p>
+     * Default is {@code UTF-8}.
+     *
+     * @param encoding the encoding
+     * @return this operation instance
+     */
+    public PitestOperation inputEncoding(String encoding) {
+        if (isNotBlank(encoding)) {
+            options.put("--inputEncoding", encoding);
+        }
+        return this;
+    }
+
     /*
      * Determines if a string is not blank.
      */
@@ -541,6 +593,17 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Maximum number of surviving mutants to allow without throwing an error.
+     *
+     * @param maxSurviving the maximin number
+     * @return this operation instance
+     */
+    public PitestOperation maxSurviving(int maxSurviving) {
+        options.put("--maxSurviving", String.valueOf(maxSurviving));
+        return this;
+    }
+
+    /**
      * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
      * directories for tests and production classes this parameter should be set to your code output directory in order
      * to avoid mutating test helper classes etc.
@@ -579,6 +642,19 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Mutation engine to use.
+     * <p>
+     * Defaults to {@code gregor}
+     *
+     * @param engine the engine
+     * @return this operation instance
+     */
+    public PitestOperation mutationEngine(String engine) {
+        options.put("--mutationEngine", engine);
+        return this;
+    }
+
+    /**
      * Mutation score threshold below which the build will fail. This is an integer percent (0-100) that represents the
      * fraction of killed mutations out of all mutations.
      * <p>
@@ -592,6 +668,17 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         if (threshold >= 0 && threshold <= 100) {
             options.put("--mutationThreshold", String.valueOf(threshold));
         }
+        return this;
+    }
+
+    /**
+     * Maximum number of mutations to include.
+     *
+     * @param size the size
+     * @return this operation instance
+     */
+    public PitestOperation mutationUnitSize(int size) {
+        options.put("--mutationUnitSize", String.valueOf(size));
         return this;
     }
 
@@ -635,7 +722,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
-     * Comma separated list of formats in which to write mutation results as the mutations are analysed.
+     * A list of formats in which to write mutation results as the mutations are analysed.
      * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
      * <p>
      * Defaults to {@code HTML}.
@@ -651,7 +738,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
-     * Comma separated list of formats in which to write mutation results as the mutations are analysed.
+     * A list of formats in which to write mutation results as the mutations are analysed.
      * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
      * <p>
      * Defaults to {@code HTML}.
@@ -662,6 +749,29 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     public PitestOperation outputFormats(Collection<String> outputFormats) {
         options.put("--outputFormats", String.join(",", outputFormats.stream().filter(this::isNotBlank).toList()));
+        return this;
+    }
+
+    /**
+     * Custom plugin properties.
+     *
+     * @param key   the key
+     * @param value the value
+     * @return this operation instance
+     */
+    public PitestOperation pluginConfiguration(String key, String value) {
+        options.put("--pluginConfiguration", key + '=' + value);
+        return this;
+    }
+
+    /**
+     * Project base.
+     *
+     * @param file the file
+     * @return this operations instance
+     */
+    public PitestOperation projectBase(String file) {
+        options.put("--projectBase", file);
         return this;
     }
 
@@ -756,14 +866,14 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
-     * A comma separated list of globs can be supplied to this parameter to limit the tests available to be run.
+     * A list of globs can be supplied to this parameter to limit the tests available to be run.
      * If this parameter is not supplied then any test fixture that matched targetClasses may be used, it is however
      * recommended that this parameter is always explicitly set.
      * <p>
      * This parameter can be used to point PIT to a top level suite or suites. Custom suites such as
      * <a href="https://github.com/takari/takari-cpsuite"></a>ClassPathSuite</a> are supported.
      *
-     * @param test one ore more tests
+     * @param test one or more tests
      * @return this operation instance
      * @see #targetTests(Collection)
      */
@@ -773,7 +883,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
-     * A comma separated list of globs can be supplied to this parameter to limit the tests available to be run.
+     * A list of globs can be supplied to this parameter to limit the tests available to be run.
      * If this parameter is not supplied then any test fixture that matched targetClasses may be used, it is however
      * recommended that this parameter is always explicitly set.
      * <p>
@@ -786,6 +896,17 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     public PitestOperation targetTests(Collection<String> tests) {
         options.put("--targetTests", String.join(",", tests.stream().filter(this::isNotBlank).toList()));
+        return this;
+    }
+
+    /**
+     * Test strength score below which to throw an error.
+     *
+     * @param threshold the threshold
+     * @return this operation instance
+     */
+    public PitestOperation testStrengthThreshold(int threshold) {
+        options.put("--testStrengthThreshold", String.valueOf(threshold));
         return this;
     }
 
@@ -876,6 +997,19 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         } else {
             options.put("--verbose", FALSE);
         }
+        return this;
+    }
+
+    /**
+     * The verbosity of output.
+     * <p>
+     * Defaults to {@code DEFAULT}
+     *
+     * @param verbosity the verbosity
+     * @return this operation instance
+     */
+    public PitestOperation verbosity(String verbosity) {
+        options.put("--verbosity", verbosity);
         return this;
     }
 }
