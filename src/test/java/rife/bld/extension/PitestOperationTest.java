@@ -23,6 +23,7 @@ import rife.bld.WebProject;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -58,58 +59,12 @@ class PitestOperationTest {
     }
 
     @Test
-    void checkAllParameters() {
-        var params = List.of(
-                "--argLine",
-                "--avoidCallsTo",
-                "--classPath",
-                "--classPathFile",
-                "--coverageThreshold",
-                "--detectInlinedCode",
-                "--excludedClasses",
-                "--excludedGroups",
-                "--excludedMethods",
-                "--excludedRunners",
-                "--excludedTestClasses",
-                "--exportLineCoverage",
-                "--failWhenNoMutations",
-                "--features",
-                "--fullMutationMatrix",
-                "--historyInputLocation",
-                "--historyOutputLocation",
-                "--includedGroups",
-                "--includedTestMethods",
-                "--includeLaunchClasspath",
-                "--inputEncoding",
-                "--jvmArgs",
-                "--jvmPath",
-                "--maxMutationsPerClass",
-                "--maxSurviving",
-                "--mutableCodePaths",
-                "--mutationEngine",
-                "--mutationThreshold",
-                "--mutationUnitSize",
-                "--mutators",
-                "--outputEncoding",
-                "--outputFormats",
-                "--pluginConfiguration",
-                "--projectBase",
-                "--reportDir",
-                "--skipFailingTests",
-                "--sourceDirs",
-                "--targetClasses",
-                "--targetTests",
-                "--testStrengthThreshold",
-                "--threads",
-                "--timeoutConst",
-                "--timeoutFactor",
-                "--timestampedReports",
-                "--useClasspathJar",
-                "--verbose",
-                "--verbosity"
-        );
+    void checkAllParameters() throws IOException {
+        var args = Files.readAllLines(Paths.get("src", "test", "resources", "pitest-args.txt"));
 
-        var args = new PitestOperation()
+        assertThat(args).hasSizeGreaterThan(0);
+
+        var params = new PitestOperation()
                 .fromProject(new BaseProject())
                 .argLine(FOO)
                 .avoidCallsTo(FOO, BAR)
@@ -162,9 +117,9 @@ class PitestOperationTest {
                 .verbosity("default")
                 .executeConstructProcessCommandList();
 
-        for (var p : params) {
+        for (var p : args) {
             var found = false;
-            for (var a : args) {
+            for (var a : params) {
                 if (a.startsWith(p)) {
                     found = true;
                     break;
