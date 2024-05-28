@@ -62,7 +62,7 @@ class PitestOperationTest {
     void checkAllParameters() throws IOException {
         var args = Files.readAllLines(Paths.get("src", "test", "resources", "pitest-args.txt"));
 
-        assertThat(args).hasSizeGreaterThan(0);
+        assertThat(args).isNotEmpty();
 
         var params = new PitestOperation()
                 .fromProject(new BaseProject())
