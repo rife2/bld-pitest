@@ -42,7 +42,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .argLine(FOO);
-        assertThat(op.options.get("--argLine")).isEqualTo(FOO);
+        assertThat(op.options().get("--argLine")).isEqualTo(FOO);
     }
 
     @Test
@@ -50,12 +50,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .avoidCallsTo(FOO, BAR);
-        assertThat(op.options.get("--avoidCallsTo")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .avoidCallsTo(List.of(FOO, BAR));
-        assertThat(op.options.get("--avoidCallsTo")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--avoidCallsTo")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -134,12 +134,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .classPath(FOO, BAR);
-        assertThat(op.options.get("--classPath")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--classPath")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .classPath(List.of(FOO, BAR));
-        assertThat(op.options.get("--classPath")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--classPath")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -147,7 +147,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .classPathFile(FOO);
-        assertThat(op.options.get("--classPathFile")).isEqualTo(FOO);
+        assertThat(op.options().get("--classPathFile")).isEqualTo(FOO);
     }
 
     @Test
@@ -155,12 +155,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .coverageThreshold(3);
-        assertThat(op.options.get("--coverageThreshold")).isEqualTo("3");
+        assertThat(op.options().get("--coverageThreshold")).isEqualTo("3");
 
         op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .coverageThreshold(101);
-        assertThat(op.options.get("--coverageThreshold")).isNull();
+        assertThat(op.options().get("--coverageThreshold")).isNull();
     }
 
     @Test
@@ -168,12 +168,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .detectInlinedCode(true);
-        assertThat(op.options.get("--detectInlinedCode")).isEqualTo(TRUE);
+        assertThat(op.options().get("--detectInlinedCode")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .detectInlinedCode(false);
-        assertThat(op.options.get("--detectInlinedCode")).isEqualTo(FALSE);
+        assertThat(op.options().get("--detectInlinedCode")).isEqualTo(FALSE);
     }
 
     @Test
@@ -181,12 +181,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .excludedClasses(FOO, BAR);
-        assertThat(op.options.get("--excludedClasses")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedClasses")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .excludedClasses(Set.of(FOO, BAR));
-        assertThat(op.options.get("--excludedClasses")).as("as set").contains(FOO).contains(BAR).contains(",");
+        assertThat(op.options().get("--excludedClasses")).as("as set").contains(FOO).contains(BAR).contains(",");
     }
 
     @Test
@@ -194,12 +194,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .excludedGroups(FOO, BAR);
-        assertThat(op.options.get("--excludedGroups")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedGroups")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .excludedGroups(List.of(FOO, BAR));
-        assertThat(op.options.get("--excludedGroups")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedGroups")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -207,12 +207,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .excludedMethods(FOO, BAR);
-        assertThat(op.options.get("--excludedMethods")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedMethods")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .excludedMethods(List.of(FOO, BAR));
-        assertThat(op.options.get("--excludedMethods")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedMethods")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -220,7 +220,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .excludedRunners(FOO);
-        assertThat(op.options.get("--excludedRunners")).isEqualTo(FOO);
+        assertThat(op.options().get("--excludedRunners")).isEqualTo(FOO);
     }
 
     @Test
@@ -228,12 +228,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .excludedTestClasses(FOO, BAR);
-        assertThat(op.options.get("--excludedTestClasses")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedTestClasses")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .excludedTestClasses(List.of(FOO, BAR));
-        assertThat(op.options.get("--excludedTestClasses")).as("as list").isEqualTo(FOOBAR);
+        assertThat(op.options().get("--excludedTestClasses")).as("as list").isEqualTo(FOOBAR);
     }
 
     @Test
@@ -292,12 +292,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .exportLineCoverage(true);
-        assertThat(op.options.get("--exportLineCoverage")).isEqualTo(TRUE);
+        assertThat(op.options().get("--exportLineCoverage")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .exportLineCoverage(false);
-        assertThat(op.options.get("--exportLineCoverage")).isEqualTo(FALSE);
+        assertThat(op.options().get("--exportLineCoverage")).isEqualTo(FALSE);
     }
 
     @Test
@@ -305,12 +305,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .failWhenNoMutations(true);
-        assertThat(op.options.get("--failWhenNoMutations")).isEqualTo(TRUE);
+        assertThat(op.options().get("--failWhenNoMutations")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .failWhenNoMutations(false);
-        assertThat(op.options.get("--failWhenNoMutations")).isEqualTo(FALSE);
+        assertThat(op.options().get("--failWhenNoMutations")).isEqualTo(FALSE);
     }
 
     @Test
@@ -318,12 +318,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .features(FOO, BAR);
-        assertThat(op.options.get("--features")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .features(List.of(FOO, BAR));
-        assertThat(op.options.get("--features")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--features")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -331,7 +331,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .fullMutationMatrix(true);
-        assertThat(op.options.get("--fullMutationMatrix")).isEqualTo(TRUE);
+        assertThat(op.options().get("--fullMutationMatrix")).isEqualTo(TRUE);
     }
 
     @Test
@@ -339,7 +339,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .historyInputLocation(FOO);
-        assertThat(op.options.get("--historyInputLocation")).isEqualTo(FOO);
+        assertThat(op.options().get("--historyInputLocation")).isEqualTo(FOO);
     }
 
     @Test
@@ -347,7 +347,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .historyOutputLocation(FOO);
-        assertThat(op.options.get("--historyOutputLocation")).isEqualTo(FOO);
+        assertThat(op.options().get("--historyOutputLocation")).isEqualTo(FOO);
     }
 
     @Test
@@ -355,12 +355,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .includeLaunchClasspath(true);
-        assertThat(op.options.get("--includeLaunchClasspath")).isEqualTo(TRUE);
+        assertThat(op.options().get("--includeLaunchClasspath")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .includeLaunchClasspath(false);
-        assertThat(op.options.get("--includeLaunchClasspath")).isEqualTo(FALSE);
+        assertThat(op.options().get("--includeLaunchClasspath")).isEqualTo(FALSE);
     }
 
     @Test
@@ -368,12 +368,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .includedGroups(FOO, BAR);
-        assertThat(op.options.get("--includedGroups")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--includedGroups")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .includedGroups(List.of(FOO, BAR));
-        assertThat(op.options.get("--includedGroups")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--includedGroups")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -381,7 +381,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .includedTestMethods(FOO);
-        assertThat(op.options.get("--includedTestMethods")).isEqualTo(FOO);
+        assertThat(op.options().get("--includedTestMethods")).isEqualTo(FOO);
     }
 
     @Test
@@ -389,7 +389,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .inputEncoding(FOO);
-        assertThat(op.options.get("--inputEncoding")).isEqualTo(FOO);
+        assertThat(op.options().get("--inputEncoding")).isEqualTo(FOO);
     }
 
     @Test
@@ -397,12 +397,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .jvmArgs(FOO, BAR);
-        assertThat(op.options.get("--jvmArgs")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--jvmArgs")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .jvmArgs(List.of(FOO, BAR));
-        assertThat(op.options.get("--jvmArgs")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--jvmArgs")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -410,7 +410,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .jvmPath(FOO);
-        assertThat(op.options.get("--jvmPath")).isEqualTo(FOO);
+        assertThat(op.options().get("--jvmPath")).isEqualTo(FOO);
     }
 
     @Test
@@ -418,7 +418,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .maxMutationsPerClass(12);
-        assertThat(op.options.get("--maxMutationsPerClass")).isEqualTo("12");
+        assertThat(op.options().get("--maxMutationsPerClass")).isEqualTo("12");
     }
 
     @Test
@@ -426,7 +426,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .maxSurviving(1);
-        assertThat(op.options.get("--maxSurviving")).isEqualTo("1");
+        assertThat(op.options().get("--maxSurviving")).isEqualTo("1");
     }
 
     @Test
@@ -434,12 +434,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .mutableCodePaths(FOO, BAR);
-        assertThat(op.options.get("--mutableCodePaths")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--mutableCodePaths")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .mutableCodePaths(List.of(FOO, BAR));
-        assertThat(op.options.get("--mutableCodePaths")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--mutableCodePaths")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -447,7 +447,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .mutationEngine(FOO);
-        assertThat(op.options.get("--mutationEngine")).isEqualTo(FOO);
+        assertThat(op.options().get("--mutationEngine")).isEqualTo(FOO);
     }
 
     @Test
@@ -455,12 +455,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .mutationThreshold(3);
-        assertThat(op.options.get("--mutationThreshold")).isEqualTo("3");
+        assertThat(op.options().get("--mutationThreshold")).isEqualTo("3");
 
         op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .mutationThreshold(101);
-        assertThat(op.options.get("--mutationThreshold")).isNull();
+        assertThat(op.options().get("--mutationThreshold")).isNull();
     }
 
     @Test
@@ -468,7 +468,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .mutationUnitSize(2);
-        assertThat(op.options.get("--mutationUnitSize")).isEqualTo("2");
+        assertThat(op.options().get("--mutationUnitSize")).isEqualTo("2");
     }
 
     @Test
@@ -476,12 +476,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .mutators(FOO, BAR);
-        assertThat(op.options.get("--mutators")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--mutators")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .mutators(List.of(FOO, BAR));
-        assertThat(op.options.get("--mutators")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--mutators")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -489,7 +489,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .outputEncoding(FOO);
-        assertThat(op.options.get("--outputEncoding")).isEqualTo(FOO);
+        assertThat(op.options().get("--outputEncoding")).isEqualTo(FOO);
     }
 
     @Test
@@ -497,12 +497,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .outputFormats(FOO, BAR);
-        assertThat(op.options.get("--outputFormats")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--outputFormats")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .outputFormats(List.of(FOO, BAR));
-        assertThat(op.options.get("--outputFormats")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--outputFormats")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -510,7 +510,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .pluginConfiguration(FOO, BAR);
-        assertThat(op.options.get("--pluginConfiguration")).isEqualTo(FOO + "=" + BAR);
+        assertThat(op.options().get("--pluginConfiguration")).isEqualTo(FOO + "=" + BAR);
     }
 
     @Test
@@ -518,7 +518,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .projectBase(FOO);
-        assertThat(op.options.get("--projectBase")).isEqualTo(FOO);
+        assertThat(op.options().get("--projectBase")).isEqualTo(FOO);
     }
 
     @Test
@@ -526,7 +526,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .reportDir(FOO);
-        assertThat(op.options.get("--reportDir")).isEqualTo(FOO);
+        assertThat(op.options().get("--reportDir")).isEqualTo(FOO);
     }
 
     @Test
@@ -534,12 +534,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .skipFailingTests(true);
-        assertThat(op.options.get("--skipFailingTests")).isEqualTo(TRUE);
+        assertThat(op.options().get("--skipFailingTests")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .skipFailingTests(false);
-        assertThat(op.options.get("--skipFailingTests")).isEqualTo(FALSE);
+        assertThat(op.options().get("--skipFailingTests")).isEqualTo(FALSE);
     }
 
     @Test
@@ -547,12 +547,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .sourceDirs(FOO, BAR);
-        assertThat(op.options.get(SOURCE_DIRS)).isEqualTo(FOOBAR);
+        assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .sourceDirs(List.of(FOO, BAR));
-        assertThat(op.options.get(SOURCE_DIRS)).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get(SOURCE_DIRS)).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -560,12 +560,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .targetClasses(FOO, BAR);
-        assertThat(op.options.get("--targetClasses")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--targetClasses")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .targetClasses(List.of(FOO, BAR));
-        assertThat(op.options.get("--targetClasses")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--targetClasses")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -573,12 +573,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .targetTests(FOO, BAR);
-        assertThat(op.options.get("--targetTests")).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--targetTests")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .targetTests(List.of(FOO, BAR));
-        assertThat(op.options.get("--targetTests")).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--targetTests")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test
@@ -586,7 +586,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .testStrengthThreshold(6);
-        assertThat(op.options.get("--testStrengthThreshold")).isEqualTo("6");
+        assertThat(op.options().get("--testStrengthThreshold")).isEqualTo("6");
     }
 
     @Test
@@ -594,7 +594,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .threads(3);
-        assertThat(op.options.get("--threads")).isEqualTo("3");
+        assertThat(op.options().get("--threads")).isEqualTo("3");
     }
 
     @Test
@@ -602,7 +602,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .timeoutConst(300);
-        assertThat(op.options.get("--timeoutConst")).isEqualTo("300");
+        assertThat(op.options().get("--timeoutConst")).isEqualTo("300");
     }
 
     @Test
@@ -610,7 +610,7 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .timeoutFactor(5.25);
-        assertThat(op.options.get("--timeoutFactor")).isEqualTo("5.25");
+        assertThat(op.options().get("--timeoutFactor")).isEqualTo("5.25");
     }
 
     @Test
@@ -618,12 +618,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .timestampedReports(true);
-        assertThat(op.options.get("--timestampedReports")).isEqualTo(TRUE);
+        assertThat(op.options().get("--timestampedReports")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .timestampedReports(false);
-        assertThat(op.options.get("--timestampedReports")).isEqualTo(FALSE);
+        assertThat(op.options().get("--timestampedReports")).isEqualTo(FALSE);
     }
 
     @Test
@@ -631,12 +631,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .useClasspathJar(true);
-        assertThat(op.options.get("--useClasspathJar")).isEqualTo(TRUE);
+        assertThat(op.options().get("--useClasspathJar")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .useClasspathJar(false);
-        assertThat(op.options.get("--useClasspathJar")).isEqualTo(FALSE);
+        assertThat(op.options().get("--useClasspathJar")).isEqualTo(FALSE);
     }
 
     @Test
@@ -644,12 +644,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .verbose(true);
-        assertThat(op.options.get("--verbose")).isEqualTo(TRUE);
+        assertThat(op.options().get("--verbose")).isEqualTo(TRUE);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .verbose(false);
-        assertThat(op.options.get("--verbose")).isEqualTo(FALSE);
+        assertThat(op.options().get("--verbose")).isEqualTo(FALSE);
     }
 
     @Test
@@ -657,6 +657,6 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new Project())
                 .verbosity(FOO);
-        assertThat(op.options.get("--verbosity")).isEqualTo(FOO);
+        assertThat(op.options().get("--verbosity")).isEqualTo(FOO);
     }
 }
