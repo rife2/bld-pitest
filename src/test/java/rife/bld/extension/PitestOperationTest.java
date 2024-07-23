@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import rife.bld.BaseProject;
 import rife.bld.Project;
 import rife.bld.WebProject;
+import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +30,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static rife.bld.extension.PitestOperation.*;
+import static rife.bld.extension.PitestOperation.FALSE;
+import static rife.bld.extension.PitestOperation.TRUE;
 
 class PitestOperationTest {
     private static final String AS_LIST = "as list";
@@ -285,6 +287,12 @@ class PitestOperationTest {
                         "--reportDir c:\\mutationReports " +
                         "--targetClasses example.foo.* " +
                         "--sourceDirs c:\\myProject\\src");
+    }
+
+    @Test
+    void executeNoProject() {
+        var op = new PitestOperation();
+        assertThatCode(op::execute).isInstanceOf(ExitStatusException.class);
     }
 
     @Test
@@ -547,12 +555,12 @@ class PitestOperationTest {
         var op = new PitestOperation()
                 .fromProject(new BaseProject())
                 .sourceDirs(FOO, BAR);
-        assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--sourceDirs")).isEqualTo(FOOBAR);
 
         op = new PitestOperation()
                 .fromProject(new Project())
                 .sourceDirs(List.of(FOO, BAR));
-        assertThat(op.options().get(SOURCE_DIRS)).as(AS_LIST).isEqualTo(FOOBAR);
+        assertThat(op.options().get("--sourceDirs")).as(AS_LIST).isEqualTo(FOOBAR);
     }
 
     @Test

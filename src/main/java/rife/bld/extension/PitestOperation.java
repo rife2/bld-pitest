@@ -18,10 +18,14 @@ package rife.bld.extension;
 
 import rife.bld.BaseProject;
 import rife.bld.operations.AbstractProcessOperation;
+import rife.bld.operations.exceptions.ExitStatusException;
 
-import java.nio.file.Path;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Mutation testing and coverage with <a href="https://pitest.org">PIT</a>.
@@ -35,16 +39,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     protected static final String FALSE = "false";
     /**
-     * Source directories command line option.
-     */
-    protected static final String SOURCE_DIRS = "--sourceDirs";
-    /**
      * True constant.
      */
     protected static final String TRUE = "true";
-    /**
-     * The PIT options.
-     */
+    private static final Logger LOGGER = Logger.getLogger(PitestOperation.class.getName());
+    private static final String SOURCE_DIRS = "--sourceDirs";
     private final Map<String, String> options_ = new ConcurrentHashMap<>();
     private BaseProject project_;
 
@@ -330,33 +329,45 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         return this;
     }
 
+    @Override
+    public void execute() throws IOException, InterruptedException, ExitStatusException {
+        if (project_ == null) {
+            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                LOGGER.severe("A project must be specified.");
+            }
+            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
+        } else {
+            super.execute();
+        }
+    }
+
     /**
      * Part of the {@link #execute} operation, constructs the command list
      * to use for building the process.
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
-        if (project_ == null) {
-            throw new IllegalArgumentException("A project must be specified.");
-        } else if (!options_.containsKey(SOURCE_DIRS)) {
-            options_.put(SOURCE_DIRS, project_.srcDirectory().getPath());
-        }
-
         final List<String> args = new ArrayList<>();
-        args.add(javaTool());
 
-        args.add("-cp");
-        args.add(String.format("%s:%s:%s:%s", Path.of(project_.libTestDirectory().getPath(), "*"),
-                Path.of(project_.libCompileDirectory().getPath(), "*"), project_.buildMainDirectory(),
-                project_.buildTestDirectory()));
-        args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
+        if (project_ != null) {
+            args.add(javaTool());
+            args.add("-cp");
+            args.add(String.format("%s:%s:%s:%s", new File(project_.libTestDirectory(), "*"),
+                    new File(project_.libCompileDirectory(), "*"), project_.buildMainDirectory(),
+                    project_.buildTestDirectory()));
+            args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
-        options_.forEach((k, v) -> {
-            args.add(k);
-            if (!v.isEmpty()) {
-                args.add(v);
+            if (!options_.containsKey(SOURCE_DIRS)) {
+                options_.put(SOURCE_DIRS, project_.srcDirectory().getPath());
             }
-        });
+
+            options_.forEach((k, v) -> {
+                args.add(k);
+                if (!v.isEmpty()) {
+                    args.add(v);
+                }
+            });
+        }
 
         return args;
     }
