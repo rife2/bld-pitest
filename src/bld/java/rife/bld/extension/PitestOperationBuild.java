@@ -44,7 +44,7 @@ public class PitestOperationBuild extends Project {
 
         var pitest = version(1, 16, 1);
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "bld", version(2, 0, 0, "SNAPSHOT")));
+                .include(dependency("com.uwyn.rife2", "bld", version(2, 0, 1)));
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
@@ -91,13 +91,6 @@ public class PitestOperationBuild extends Project {
 
     public static void main(String[] args) {
         new PitestOperationBuild().start(args);
-    }
-
-    @BuildCommand(summary = "Generates JaCoCo Reports")
-    public void jacoco() throws Exception {
-        new JacocoReportOperation()
-                .fromProject(this)
-                .execute();
     }
 
     @BuildCommand(summary = "Runs PMD analysis")
