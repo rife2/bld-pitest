@@ -22,6 +22,7 @@ import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -59,6 +60,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         }
         return this;
     }
+
 
     /**
      * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
@@ -129,8 +131,31 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPath(Collection)
      */
     public PitestOperation classPath(String... path) {
-        options_.put("--classPath", String.join(",", Arrays.stream(path).filter(this::isNotBlank).toList()));
-        return this;
+        return classPath(List.of(path));
+    }
+
+    /**
+     * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
+     * containing calls to these classes will not be mutated.
+     * <p>
+     * If a list is not explicitly supplied then PIT will default to a list of common logging packages as follows
+     * <p>
+     * <ul>
+     * <li>java.util.logging</li>
+     * <li>org.apache.log4j</li>
+     * <li>org.slf4j</li>
+     * <li>org.apache.commons.logging</li>
+     * </ul>
+     * <p>
+     * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
+     * Additional classpath entries to use when looking for tests and mutable code.
+     *
+     * @param path one or more paths
+     * @return this operation instance
+     * @see #classPathPaths(Collection)
+     */
+    public PitestOperation classPath(Path... path) {
+        return classPathPaths(List.of(path));
     }
 
     /**
@@ -146,6 +171,30 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
+     * containing calls to these classes will not be mutated.
+     * <p>
+     * If a list is not explicitly supplied then PIT will default to a list of common logging packages as follows
+     * <p>
+     * <ul>
+     * <li>java.util.logging</li>
+     * <li>org.apache.log4j</li>
+     * <li>org.slf4j</li>
+     * <li>org.apache.commons.logging</li>
+     * </ul>
+     * <p>
+     * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
+     * Additional classpath entries to use when looking for tests and mutable code.
+     *
+     * @param path one or more paths
+     * @return this operation instance
+     * @see #classPathFiles(Collection)
+     */
+    public PitestOperation classPath(File... path) {
+        return classPathFiles(List.of(path));
+    }
+
+    /**
      * File with a list of additional classpath elements (one per line).
      *
      * @param file the file
@@ -156,6 +205,28 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             options_.put("--classPathFile", file);
         }
         return this;
+    }
+
+    /**
+     * Additional classpath entries to use when looking for tests and mutable code.
+     *
+     * @param path the list of paths
+     * @return this operation instance
+     * @see #classPath(File...)
+     */
+    public PitestOperation classPathFiles(Collection<File> path) {
+        return classPath(path.stream().map(File::getAbsolutePath).toList());
+    }
+
+    /**
+     * Additional classpath entries to use when looking for tests and mutable code.
+     *
+     * @param path the list of paths
+     * @return this operation instance
+     * @see #classPath(Path...)
+     */
+    public PitestOperation classPathPaths(Collection<Path> path) {
+        return classPath(path.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
     }
 
     /**
@@ -471,6 +542,26 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Path to a file containing history information for incremental analysis.
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public PitestOperation historyInputLocation(File path) {
+        return historyInputLocation(path.getAbsolutePath());
+    }
+
+    /**
+     * Path to a file containing history information for incremental analysis.
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public PitestOperation historyInputLocation(Path path) {
+        return historyInputLocation(path.toFile());
+    }
+
+    /**
      * Path to write history information for incremental analysis. May be the same as
      * {@link #historyInputLocation(String)
      *
@@ -482,6 +573,28 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             options_.put("--historyOutputLocation", path);
         }
         return this;
+    }
+
+    /**
+     * Path to write history information for incremental analysis. May be the same as
+     * {@link #historyInputLocation(String)
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public PitestOperation historyOutputLocation(File path) {
+        return historyOutputLocation(path.getAbsolutePath());
+    }
+
+    /**
+     * Path to write history information for incremental analysis. May be the same as
+     * {@link #historyInputLocation(String)
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public PitestOperation historyOutputLocation(Path path) {
+        return historyOutputLocation(path.toFile());
     }
 
     /**
@@ -604,6 +717,28 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * The path to the java executable to be used to launch test with. If none is supplied defaults to the one
+     * pointed to by {@code JAVA_HOME}.
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public PitestOperation jvmPath(File path) {
+        return jvmPath(path.getAbsolutePath());
+    }
+
+    /**
+     * The path to the java executable to be used to launch test with. If none is supplied defaults to the one
+     * pointed to by {@code JAVA_HOME}.
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public PitestOperation jvmPath(Path path) {
+        return jvmPath(path.toFile());
+    }
+
+    /**
      * Maximum number of surviving mutants to allow without throwing an error.
      *
      * @param maxMutationsPerClass the max number
@@ -640,8 +775,43 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePaths(Collection)
      */
     public PitestOperation mutableCodePaths(String... path) {
-        options_.put("--mutableCodePaths", String.join(",", Arrays.stream(path).filter(this::isNotBlank).toList()));
-        return this;
+        return mutableCodePaths(List.of(path));
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param path one or one paths
+     * @return this operation instance
+     * @see #mutableCodePathsPaths(Collection)
+     */
+    public PitestOperation mutableCodePaths(Path... path) {
+        return mutableCodePathsPaths(List.of(path));
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param path one or one paths
+     * @return this operation instance
+     * @see #mutableCodePathsFiles(Collection)
+     */
+    public PitestOperation mutableCodePaths(File... path) {
+        return mutableCodePathsFiles(List.of(path));
     }
 
     /**
@@ -661,6 +831,42 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation mutableCodePaths(Collection<String> paths) {
         options_.put("--mutableCodePaths", String.join(",", paths.stream().filter(this::isNotBlank).toList()));
         return this;
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param paths the list of paths
+     * @return this operation instance
+     * @see #mutableCodePaths(File...)
+     */
+    public PitestOperation mutableCodePathsFiles(Collection<File> paths) {
+        return mutableCodePaths(paths.stream().map(File::getAbsolutePath).toList());
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param paths the list of paths
+     * @return this operation instance
+     * @see #mutableCodePaths(Path...)
+     */
+    public PitestOperation mutableCodePathsPaths(Collection<Path> paths) {
+        return mutableCodePaths(paths.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
     }
 
     /**
@@ -760,12 +966,38 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param outputFormat one or more output formats
      * @return this operation instance
+     * @see #outputFormatsFiles(Collection)
+     */
+    public PitestOperation outputFormats(File... outputFormat) {
+        return outputFormatsFiles(List.of(outputFormat));
+    }
+
+    /**
+     * A list of formats in which to write mutation results as the mutations are analysed.
+     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
+     * <p>
+     * Defaults to {@code HTML}.
+     *
+     * @param outputFormat one or more output formats
+     * @return this operation instance
+     * @see #outputFormatsPaths(Collection)
+     */
+    public PitestOperation outputFormats(Path... outputFormat) {
+        return outputFormatsPaths(List.of(outputFormat));
+    }
+
+    /**
+     * A list of formats in which to write mutation results as the mutations are analysed.
+     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
+     * <p>
+     * Defaults to {@code HTML}.
+     *
+     * @param outputFormat one or more output formats
+     * @return this operation instance
      * @see #outputFormats(Collection)
      */
     public PitestOperation outputFormats(String... outputFormat) {
-        options_.put("--outputFormats",
-                String.join(",", Arrays.stream(outputFormat).filter(this::isNotBlank).toList()));
-        return this;
+        return outputFormats(List.of(outputFormat));
     }
 
     /**
@@ -781,6 +1013,35 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation outputFormats(Collection<String> outputFormats) {
         options_.put("--outputFormats", String.join(",", outputFormats.stream().filter(this::isNotBlank).toList()));
         return this;
+    }
+
+    /**
+     * A list of formats in which to write mutation results as the mutations are analysed.
+     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
+     * <p>
+     * Defaults to {@code HTML}.
+     *
+     * @param outputFormats the list of output formats
+     * @return this operation instance
+     * @see #outputFormats(File...)
+     */
+    public PitestOperation outputFormatsFiles(Collection<File> outputFormats) {
+        return outputFormats(outputFormats.stream().map(File::getAbsolutePath).toList());
+    }
+
+    /**
+     * A list of formats in which to write mutation results as the mutations are analysed.
+     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
+     * <p>
+     * Defaults to {@code HTML}.
+     *
+     * @param outputFormats the list of output formats
+     * @return this operation instance
+     * @see #outputFormats(Path...)
+     */
+    public PitestOperation outputFormatsPaths(Collection<Path> outputFormats) {
+        return outputFormats(outputFormats.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+
     }
 
     /**
@@ -807,6 +1068,27 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Project base.
+     *
+     * @param file the file
+     * @return this operations instance
+     */
+    public PitestOperation projectBase(File file) {
+        return projectBase(file.getAbsolutePath());
+    }
+
+    /**
+     * Project base.
+     *
+     * @param file the file
+     * @return this operations instance
+     */
+    public PitestOperation projectBase(Path file) {
+        return projectBase(file.toFile());
+    }
+
+
+    /**
      * Output directory for the reports.
      *
      * @param dir the directory
@@ -817,6 +1099,26 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             options_.put("--reportDir", dir);
         }
         return this;
+    }
+
+    /**
+     * Output directory for the reports.
+     *
+     * @param dir the directory
+     * @return this operation instance
+     */
+    public PitestOperation reportDir(File dir) {
+        return reportDir(dir.getAbsolutePath());
+    }
+
+    /**
+     * Output directory for the reports.
+     *
+     * @param dir the directory
+     * @return this operation instance
+     */
+    public PitestOperation reportDir(Path dir) {
+        return reportDir(dir.toFile());
     }
 
     /**
@@ -844,8 +1146,29 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirs(Collection)
      */
     public PitestOperation sourceDirs(String... dir) {
-        options_.put(SOURCE_DIRS, String.join(",", Arrays.stream(dir).filter(this::isNotBlank).toList()));
-        return this;
+        return sourceDirs(List.of(dir));
+    }
+
+    /**
+     * The folder(s) containing the source code.
+     *
+     * @param dir one or more directories
+     * @return this operation instance
+     * @see #sourceDirsFiles(Collection)
+     */
+    public PitestOperation sourceDirs(File... dir) {
+        return sourceDirsFiles(List.of(dir));
+    }
+
+    /**
+     * The folder(s) containing the source code.
+     *
+     * @param dir one or more directories
+     * @return this operation instance
+     * @see #sourceDirsPaths(Collection)
+     */
+    public PitestOperation sourceDirs(Path... dir) {
+        return sourceDirsPaths(List.of(dir));
     }
 
     /**
@@ -858,6 +1181,29 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation sourceDirs(Collection<String> dirs) {
         options_.put(SOURCE_DIRS, String.join(",", dirs.stream().filter(this::isNotBlank).toList()));
         return this;
+    }
+
+    /**
+     * The folder(s) containing the source code.
+     *
+     * @param dirs the list of directories
+     * @return this operation instance
+     * @see #sourceDirs(File...)
+     */
+    public PitestOperation sourceDirsFiles(Collection<File> dirs) {
+        return sourceDirs(dirs.stream().map(File::getAbsolutePath).toList());
+    }
+
+    /**
+     * The folder(s) containing the source code.
+     *
+     * @param dirs the list of directories
+     * @return this operation instance
+     * @see #sourceDirs(Path...)
+     */
+    public PitestOperation sourceDirsPaths(Collection<Path> dirs) {
+        return sourceDirs(dirs.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+
     }
 
     /**

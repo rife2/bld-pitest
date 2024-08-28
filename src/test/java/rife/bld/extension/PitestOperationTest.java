@@ -22,6 +22,7 @@ import rife.bld.Project;
 import rife.bld.WebProject;
 import rife.bld.operations.exceptions.ExitStatusException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static rife.bld.extension.PitestOperation.FALSE;
 import static rife.bld.extension.PitestOperation.TRUE;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class PitestOperationTest {
     private static final String AS_LIST = "as list";
     private final static String BAR = "bar";
@@ -587,6 +589,175 @@ class PitestOperationTest {
                 .fromProject(new Project())
                 .targetTests(List.of(FOO, BAR));
         assertThat(op.options().get("--targetTests")).as(AS_LIST).isEqualTo(FOOBAR);
+    }
+
+    @Test
+    void testClassPath() {
+        var foo = new File(FOO);
+        var bar = new File(BAR);
+
+        var foobar = String.format("%s,%s", FOO, BAR);
+        var op = new PitestOperation().classPath(FOO, BAR);
+        assertThat(op.options().get("--classPath")).as("String...").isEqualTo(foobar);
+
+        op = new PitestOperation().classPath(List.of(FOO, BAR));
+        assertThat(op.options().get("--classPath")).as("List(String...)").isEqualTo(foobar);
+
+        foobar = String.format("%s,%s", foo.getAbsolutePath(), bar.getAbsolutePath());
+        op = new PitestOperation().classPath(foo, bar);
+        assertThat(op.options().get("--classPath")).as("File...").isEqualTo(foobar);
+
+        op = new PitestOperation().classPathFiles(List.of(foo, bar));
+        assertThat(op.options().get("--classPath")).as("List(String...)").isEqualTo(foobar);
+
+        op = new PitestOperation().classPath(foo.toPath(), bar.toPath());
+        assertThat(op.options().get("--classPath")).as("Path...").isEqualTo(foobar);
+
+        op = new PitestOperation().classPathPaths(List.of(foo.toPath(), bar.toPath()));
+        assertThat(op.options().get("--classPath")).as("List(Path...)").isEqualTo(foobar);
+    }
+
+    @Test
+    void testHistoryInputLocation() {
+        var foo = new File(FOO);
+        var op = new PitestOperation().historyInputLocation(FOO);
+        assertThat(op.options().get("--historyInputLocation")).as("as string").isEqualTo(FOO);
+
+        op = new PitestOperation().historyInputLocation(foo);
+        assertThat(op.options().get("--historyInputLocation")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new PitestOperation().historyInputLocation(foo.toPath());
+        assertThat(op.options().get("--historyInputLocation")).as("as path").isEqualTo(foo.getAbsolutePath());
+    }
+
+    @Test
+    void testHistoryOutputLocation() {
+        var foo = new File(FOO);
+        var op = new PitestOperation().historyOutputLocation(FOO);
+        assertThat(op.options().get("--historyOutputLocation")).as("as string").isEqualTo(FOO);
+
+        op = new PitestOperation().historyOutputLocation(foo);
+        assertThat(op.options().get("--historyOutputLocation")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new PitestOperation().historyOutputLocation(foo.toPath());
+        assertThat(op.options().get("--historyOutputLocation")).as("as path").isEqualTo(foo.getAbsolutePath());
+    }
+
+    @Test
+    void testJvmPath() {
+        var foo = new File(FOO);
+        var op = new PitestOperation().jvmPath(FOO);
+        assertThat(op.options().get("--jvmPath")).as("as string").isEqualTo(FOO);
+
+        op = new PitestOperation().jvmPath(foo);
+        assertThat(op.options().get("--jvmPath")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new PitestOperation().jvmPath(foo.toPath());
+        assertThat(op.options().get("--jvmPath")).as("as path").isEqualTo(foo.getAbsolutePath());
+    }
+
+    @Test
+    void testMutableCodePaths() {
+        var foo = new File(FOO);
+        var bar = new File(BAR);
+
+        var foobar = String.format("%s,%s", FOO, BAR);
+        var op = new PitestOperation().mutableCodePaths(FOO, BAR);
+        assertThat(op.options().get("--mutableCodePaths")).as("String...").isEqualTo(foobar);
+
+        op = new PitestOperation().mutableCodePaths(List.of(FOO, BAR));
+        assertThat(op.options().get("--mutableCodePaths")).as("List(String...)").isEqualTo(foobar);
+
+        foobar = String.format("%s,%s", foo.getAbsolutePath(), bar.getAbsolutePath());
+        op = new PitestOperation().mutableCodePaths(foo, bar);
+        assertThat(op.options().get("--mutableCodePaths")).as("File...").isEqualTo(foobar);
+
+        op = new PitestOperation().mutableCodePathsFiles(List.of(foo, bar));
+        assertThat(op.options().get("--mutableCodePaths")).as("List(String...)").isEqualTo(foobar);
+
+        op = new PitestOperation().mutableCodePaths(foo.toPath(), bar.toPath());
+        assertThat(op.options().get("--mutableCodePaths")).as("Path...").isEqualTo(foobar);
+
+        op = new PitestOperation().mutableCodePathsPaths(List.of(foo.toPath(), bar.toPath()));
+        assertThat(op.options().get("--mutableCodePaths")).as("List(Path...)").isEqualTo(foobar);
+    }
+
+    @Test
+    void testOutputFormats() {
+        var foo = new File(FOO);
+        var bar = new File(BAR);
+
+        var foobar = String.format("%s,%s", FOO, BAR);
+        var op = new PitestOperation().outputFormats(FOO, BAR);
+        assertThat(op.options().get("--outputFormats")).as("String...").isEqualTo(foobar);
+
+        op = new PitestOperation().outputFormats(List.of(FOO, BAR));
+        assertThat(op.options().get("--outputFormats")).as("List(String...)").isEqualTo(foobar);
+
+        foobar = String.format("%s,%s", foo.getAbsolutePath(), bar.getAbsolutePath());
+        op = new PitestOperation().outputFormats(foo, bar);
+        assertThat(op.options().get("--outputFormats")).as("File...").isEqualTo(foobar);
+
+        op = new PitestOperation().outputFormatsFiles(List.of(foo, bar));
+        assertThat(op.options().get("--outputFormats")).as("List(String...)").isEqualTo(foobar);
+
+        op = new PitestOperation().outputFormats(foo.toPath(), bar.toPath());
+        assertThat(op.options().get("--outputFormats")).as("Path...").isEqualTo(foobar);
+
+        op = new PitestOperation().outputFormatsPaths(List.of(foo.toPath(), bar.toPath()));
+        assertThat(op.options().get("--outputFormats")).as("List(Path...)").isEqualTo(foobar);
+    }
+
+    @Test
+    void testProjectBase() {
+        var foo = new File(FOO);
+        var op = new PitestOperation().projectBase(FOO);
+        assertThat(op.options().get("--projectBase")).as("as string").isEqualTo(FOO);
+
+        op = new PitestOperation().projectBase(foo);
+        assertThat(op.options().get("--projectBase")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new PitestOperation().projectBase(foo.toPath());
+        assertThat(op.options().get("--projectBase")).as("as path").isEqualTo(foo.getAbsolutePath());
+    }
+
+    @Test
+    void testReportDir() {
+        var foo = new File(FOO);
+        var op = new PitestOperation().reportDir(FOO);
+        assertThat(op.options().get("--reportDir")).as("as string").isEqualTo(FOO);
+
+        op = new PitestOperation().reportDir(foo);
+        assertThat(op.options().get("--reportDir")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new PitestOperation().reportDir(foo.toPath());
+        assertThat(op.options().get("--reportDir")).as("as path").isEqualTo(foo.getAbsolutePath());
+    }
+
+    @Test
+    void testSourceDirs() {
+        var foo = new File(FOO);
+        var bar = new File(BAR);
+
+        var foobar = String.format("%s,%s", FOO, BAR);
+        var op = new PitestOperation().sourceDirs(FOO, BAR);
+        assertThat(op.options().get("--sourceDirs")).as("String...").isEqualTo(foobar);
+
+        op = new PitestOperation().sourceDirs(List.of(FOO, BAR));
+        assertThat(op.options().get("--sourceDirs")).as("List(String...)").isEqualTo(foobar);
+
+        foobar = String.format("%s,%s", foo.getAbsolutePath(), bar.getAbsolutePath());
+        op = new PitestOperation().sourceDirs(foo, bar);
+        assertThat(op.options().get("--sourceDirs")).as("File...").isEqualTo(foobar);
+
+        op = new PitestOperation().sourceDirsFiles(List.of(foo, bar));
+        assertThat(op.options().get("--sourceDirs")).as("List(String...)").isEqualTo(foobar);
+
+        op = new PitestOperation().sourceDirs(foo.toPath(), bar.toPath());
+        assertThat(op.options().get("--sourceDirs")).as("Path...").isEqualTo(foobar);
+
+        op = new PitestOperation().sourceDirsPaths(List.of(foo.toPath(), bar.toPath()));
+        assertThat(op.options().get("--sourceDirs")).as("List(Path...)").isEqualTo(foobar);
     }
 
     @Test
