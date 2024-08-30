@@ -44,7 +44,7 @@ public class PitestOperationBuild extends Project {
 
         var pitest = version(1, 16, 2);
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "bld", version(2, 0, 1)));
+                .include(dependency("com.uwyn.rife2", "bld", version(2, 1, 0)));
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
