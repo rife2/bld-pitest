@@ -106,8 +106,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #avoidCallsTo(Collection)
      */
     public PitestOperation avoidCallsTo(String... avoidCallTo) {
-        options_.put("--avoidCallsTo", String.join(",", Arrays.stream(avoidCallTo).filter(this::isNotBlank).toList()));
-        return this;
+        return avoidCallsTo(List.of(avoidCallTo));
     }
 
     /**
@@ -292,9 +291,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedClasses(Collection)
      */
     public PitestOperation excludedClasses(String... excludedClass) {
-        options_.put("--excludedClasses",
-                String.join(",", Arrays.stream(excludedClass).filter(this::isNotBlank).toList()));
-        return this;
+        return excludedClasses(List.of(excludedClass));
     }
 
     /**
@@ -318,9 +315,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedGroups(Collection)
      */
     public PitestOperation excludedGroups(String... excludedGroup) {
-        options_.put("--excludedGroups",
-                String.join(",", Arrays.stream(excludedGroup).filter(this::isNotBlank).toList()));
-        return this;
+        return excludedGroups(List.of(excludedGroup));
     }
 
     /**
@@ -344,9 +339,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedMethods(Collection)
      */
     public PitestOperation excludedMethods(String... excludedMethod) {
-        options_.put("--excludedMethods",
-                String.join(",", Arrays.stream(excludedMethod).filter(this::isNotBlank).toList()));
-        return this;
+        return excludedMethods(List.of(excludedMethod));
     }
 
     /**
@@ -382,8 +375,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedTestClasses(Collection)
      */
     public PitestOperation excludedTestClasses(String... testClasses) {
-        options_.put("--excludedTestClasses", String.join(",", testClasses));
-        return this;
+        return excludedTestClasses(List.of(testClasses));
     }
 
     /**
@@ -509,8 +501,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #features(Collection)
      */
     public PitestOperation features(String... feature) {
-        options_.put("--features", String.join(",", Arrays.stream(feature).filter(this::isNotBlank).toList()));
-        return this;
+        return features(List.of(feature));
     }
 
     /**
@@ -625,9 +616,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #includedGroups(Collection)
      */
     public PitestOperation includedGroups(String... includedGroup) {
-        options_.put("--includedGroups",
-                String.join(",", Arrays.stream(includedGroup).filter(this::isNotBlank).toList()));
-        return this;
+        return includedGroups(List.of(includedGroup));
     }
 
     /**
@@ -685,8 +674,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmArgs(Collection)
      */
     public PitestOperation jvmArgs(String... args) {
-        options_.put("--jvmArgs", String.join(",", Arrays.stream(args).filter(this::isNotBlank).toList()));
-        return this;
+        return jvmArgs(List.of(args));
     }
 
     /**
@@ -1238,8 +1226,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetClasses(String...)
      */
     public PitestOperation targetClasses(String... targetClass) {
-        options_.put("--targetClasses", String.join(",", Arrays.stream(targetClass).filter(this::isNotBlank).toList()));
-        return this;
+        return targetClasses(List.of(targetClass));
     }
 
     /**
@@ -1255,8 +1242,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetTests(Collection)
      */
     public PitestOperation targetTests(String... test) {
-        options_.put("--targetTests", String.join(",", Arrays.stream(test).filter(this::isNotBlank).toList()));
-        return this;
+        return targetTests(List.of(test));
     }
 
     /**
