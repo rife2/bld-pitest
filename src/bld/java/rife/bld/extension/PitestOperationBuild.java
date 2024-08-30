@@ -33,7 +33,7 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(1, 0, 0, "SNAPSHOT");
+        version = version(1, 0, 0);
 
         javaRelease = 17;
 
