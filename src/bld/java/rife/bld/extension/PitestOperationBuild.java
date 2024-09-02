@@ -33,7 +33,7 @@ public class PitestOperationBuild extends Project {
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
-        version = version(1, 0, 0);
+        version = version(1, 0, 1);
 
         javaRelease = 17;
 
@@ -62,28 +62,26 @@ public class PitestOperationBuild extends Project {
 
         publishOperation()
                 .repository(version.isSnapshot() ? repository("rife2-snapshot") : repository("rife2"))
+                .repository(repository("github"))
                 .info()
                 .groupId("com.uwyn.rife2")
                 .artifactId("bld-pitest")
                 .description("PIT Mutation Testing Extension for bld")
                 .url("https://github.com/rife2/bld-pitest")
-                .developer(
-                        new PublishDeveloper()
-                                .id("ethauvin")
-                                .name("Erik C. Thauvin")
-                                .email("erik@thauvin.net")
-                                .url("https://erik.thauvin.net/")
+                .developer(new PublishDeveloper()
+                        .id("ethauvin")
+                        .name("Erik C. Thauvin")
+                        .email("erik@thauvin.net")
+                        .url("https://erik.thauvin.net/")
                 )
-                .license(
-                        new PublishLicense()
-                                .name("The Apache License, Version 2.0")
-                                .url("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                .license(new PublishLicense()
+                        .name("The Apache License, Version 2.0")
+                        .url("https://www.apache.org/licenses/LICENSE-2.0.txt")
                 )
-                .scm(
-                        new PublishScm()
-                                .connection("scm:git:https://github.com/rife2/bld-pitest.git")
-                                .developerConnection("scm:git:git@github.com:rife2/bld-pitest.git")
-                                .url("https://github.com/rife2/bld-pitest")
+                .scm(new PublishScm()
+                        .connection("scm:git:https://github.com/rife2/bld-pitest.git")
+                        .developerConnection("scm:git:git@github.com:rife2/bld-pitest.git")
+                        .url("https://github.com/rife2/bld-pitest")
                 )
                 .signKey(property("sign.key"))
                 .signPassphrase(property("sign.passphrase"));
