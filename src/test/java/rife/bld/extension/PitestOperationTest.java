@@ -38,9 +38,9 @@ import static rife.bld.extension.PitestOperation.TRUE;
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class PitestOperationTest {
     private static final String AS_LIST = "as list";
-    private final static String BAR = "bar";
-    private final static String FOO = "foo";
-    private final static String FOOBAR = FOO + ',' + BAR;
+    private static final String BAR = "bar";
+    private static final String FOO = "foo";
+    private static final String FOOBAR = FOO + ',' + BAR;
 
     @Test
     void argLine() {
