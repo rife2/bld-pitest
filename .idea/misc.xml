@@ -4,6 +4,7 @@
     <pattern value="rife.bld.extension.PitestOperationBuild" method="jacoco" />
     <pattern value="rife.bld.extension.PitestOperationBuild" />
     <pattern value="rife.bld.extension.PitestOperationBuild" method="pmd" />
+    <pattern value="rife.bld.extension.PitestOperationBuild" method="pmdCli" />
   </component>
   <component name="PDMPlugin">
     <option name="customRuleSets">
