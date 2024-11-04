@@ -30,6 +30,11 @@ import static rife.bld.dependencies.Scope.test;
 import static rife.bld.operations.JavadocOptions.DocLinkOption.NO_MISSING;
 
 public class PitestOperationBuild extends Project {
+    final PmdOperation pmdOp = new PmdOperation()
+            .fromProject(this)
+            .failOnViolation(true)
+            .ruleSets("config/pmd.xml");
+
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
         name = "PitestExtension";
@@ -93,11 +98,12 @@ public class PitestOperationBuild extends Project {
 
     @BuildCommand(summary = "Runs PMD analysis")
     public void pmd() throws Exception {
-        new PmdOperation()
-                .fromProject(this)
-                .failOnViolation(true)
-                .ruleSets("config/pmd.xml")
-                .execute();
+        pmdOp.execute();
+    }
+
+    @BuildCommand(value = "pmd-cli", summary = "Runs PMD analysis (CLI)")
+    public void pmdCli() throws Exception {
+        pmdOp.includeLineNumber(false).execute();
     }
 
     @Override
