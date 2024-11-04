@@ -16,7 +16,7 @@ To run mutation tests and coverage, add the following to your build file:
 public void pit() throws Exception {
     new PitestOperation()
         .fromProject(this)
-        .reportDir(Path.of("reports", "mutations").toString())
+        .reportDir(Path.of("reports", "mutations"))
         .targetClasses(pkg + ".*")
         .targetTests(pkg + ".*")
         .verbose(true)
