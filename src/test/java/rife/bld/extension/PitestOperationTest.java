@@ -77,6 +77,7 @@ class PitestOperationTest {
                 .classPathFile(FOO)
                 .coverageThreshold(0)
                 .detectInlinedCode(false)
+                .dryRun(false)
                 .excludedClasses("class")
                 .excludedClasses(List.of(FOO, BAR))
                 .excludedGroups("group")

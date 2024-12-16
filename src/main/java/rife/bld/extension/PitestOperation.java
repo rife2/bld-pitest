@@ -284,6 +284,23 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Whether to run in dry run mode.
+     * <p>
+     * Defaults to {@code false}
+     *
+     * @param isDryRun {@code true} or {@code false}
+     * @return this operation instance
+     */
+    public PitestOperation dryRun(boolean isDryRun) {
+        if (isDryRun) {
+            options_.put("--dryRun", TRUE);
+        } else {
+            options_.put("--dryRun", FALSE);
+        }
+        return this;
+    }
+
+    /**
      * List of globs to match against class names. Matching classes will be excluded from mutation.
      *
      * @param excludedClass the excluded classws

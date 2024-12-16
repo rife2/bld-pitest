@@ -4,6 +4,7 @@
 --classPathFile
 --coverageThreshold
 --detectInlinedCode
+--dryRun
 --excludedClasses
 --excludedGroups
 --excludedMethods
