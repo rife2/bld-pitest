@@ -30,7 +30,7 @@ public class ExamplesBuild extends Project {
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
-                .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 1)))
+                .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 2)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 12, 0)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 12, 0)));
     }
