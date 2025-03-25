@@ -7,6 +7,9 @@ import rife.tools.FileUtils;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static rife.bld.dependencies.Scope.test;
 
@@ -36,6 +39,16 @@ public class ExamplesBuild extends Project {
     }
 
     public static void main(String[] args) {
+        // Enable detailed logging for the extensions
+        var level = Level.ALL;
+        var logger = Logger.getLogger("rife.bld.extension");
+        var consoleHandler = new ConsoleHandler();
+
+        consoleHandler.setLevel(level);
+        logger.addHandler(consoleHandler);
+        logger.setLevel(level);
+        logger.setUseParentHandlers(false);
+
         new ExamplesBuild().start(args);
     }
 
