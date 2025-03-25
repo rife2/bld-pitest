@@ -449,6 +449,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             });
         }
 
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(String.join(" ", args));
+        }
+
         return args;
     }
 
