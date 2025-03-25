@@ -109,6 +109,19 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         return avoidCallsTo(List.of(avoidCallTo));
     }
 
+    private String buildClassPath(String... path) {
+        var classpath = new StringBuilder();
+        for (var p : path) {
+            if (!p.isBlank()) {
+                if (!classpath.isEmpty()) {
+                    classpath.append(File.pathSeparator);
+                }
+                classpath.append(p);
+            }
+        }
+        return classpath.toString();
+    }
+
     /**
      * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
      * containing calls to these classes will not be mutated.
@@ -432,10 +445,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         if (project_ != null) {
             args.add(javaTool());
             args.add("-cp");
-            args.add(String.format("%s%s%s%s%s%s", joinClasspathJar(project_.testClasspathJars()),
+            args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
                     joinClasspathJar(project_.compileClasspathJars()),
                     joinClasspathJar(project_.providedClasspathJars()),
-                    project_.buildMainDirectory(), File.pathSeparator, project_.buildTestDirectory()));
+                    project_.buildMainDirectory().getAbsolutePath(), project_.buildTestDirectory().getAbsolutePath()));
             args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
             if (!options_.containsKey(SOURCE_DIRS)) {
@@ -689,7 +702,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
 
     private String joinClasspathJar(List<File> jars) {
         if (!jars.isEmpty()) {
-            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList()) + File.pathSeparator;
+            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
         } else {
             return "";
         }
