@@ -432,9 +432,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         if (project_ != null) {
             args.add(javaTool());
             args.add("-cp");
-            args.add(String.format("%s:%s:%s:%s", new File(project_.libTestDirectory(), "*"),
-                    new File(project_.libCompileDirectory(), "*"), project_.buildMainDirectory(),
-                    project_.buildTestDirectory()));
+            args.add(String.format("%s%s%s%s%s%s%s", new File(project_.libTestDirectory(), "*"), File.pathSeparator,
+                    new File(project_.libCompileDirectory(), "*"), File.pathSeparator, project_.buildMainDirectory(),
+                    File.pathSeparator, project_.buildTestDirectory()));
             args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
             if (!options_.containsKey(SOURCE_DIRS)) {
