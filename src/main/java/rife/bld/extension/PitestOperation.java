@@ -432,9 +432,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         if (project_ != null) {
             args.add(javaTool());
             args.add("-cp");
-            args.add(String.format("%s%s%s%s%s%s%s", new File(project_.libTestDirectory(), "*"), File.pathSeparator,
-                    new File(project_.libCompileDirectory(), "*"), File.pathSeparator, project_.buildMainDirectory(),
-                    File.pathSeparator, project_.buildTestDirectory()));
+            args.add(String.format("%s%s%s%s%s%s", joinClasspathJar(project_.testClasspathJars()),
+                    joinClasspathJar(project_.compileClasspathJars()),
+                    joinClasspathJar(project_.providedClasspathJars()),
+                    project_.buildMainDirectory(), File.pathSeparator, project_.buildTestDirectory()));
             args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
             if (!options_.containsKey(SOURCE_DIRS)) {
@@ -684,6 +685,14 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     private boolean isNotBlank(String s) {
         return s != null && !s.isBlank();
+    }
+
+    private String joinClasspathJar(List<File> jars) {
+        if (!jars.isEmpty()) {
+            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList()) + File.pathSeparator;
+        } else {
+            return "";
+        }
     }
 
     /**
