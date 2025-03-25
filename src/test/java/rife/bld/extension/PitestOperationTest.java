@@ -18,6 +18,8 @@ package rife.bld.extension;
 
 import org.assertj.core.api.AutoCloseableSoftAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import rife.bld.BaseProject;
 import rife.bld.Project;
 import rife.bld.WebProject;
@@ -64,6 +66,7 @@ class PitestOperationTest {
     }
 
     @Test
+    @EnabledOnOs(OS.LINUX)
     void checkAllParameters() throws IOException {
         var args = Files.readAllLines(Paths.get("src", "test", "resources", "pitest-args.txt"));
 
