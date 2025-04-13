@@ -34,8 +34,8 @@ public class ExamplesBuild extends Project {
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 2)))
-                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 12, 1)))
-                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 12, 1)));
+                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 12, 2)))
+                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 12, 2)));
     }
 
     public static void main(String[] args) {
