@@ -29,7 +29,7 @@ public class ExamplesBuild extends Project {
 
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var pitest = version(1, 19, 2);
+        var pitest = version(1, 19, 3);
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
