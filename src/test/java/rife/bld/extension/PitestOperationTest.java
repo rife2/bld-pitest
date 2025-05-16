@@ -51,7 +51,6 @@ class PitestOperationTest {
     @Nested
     @DisplayName("Execute Tests")
     class ExecuteTests {
-
         @Test
         void execute() throws IOException {
             var tmpDir = Files.createTempDirectory("bld-pitest-");
@@ -110,16 +109,19 @@ class PitestOperationTest {
         }
 
         @Test
-        void exportLineCoverage() {
+        void exportLineCoverageIsFalse() {
+            var op = new PitestOperation()
+                    .fromProject(new Project())
+                    .exportLineCoverage(false);
+            assertThat(op.options().get("--exportLineCoverage")).isEqualTo(FALSE);
+        }
+
+        @Test
+        void exportLineCoverageIsTrue() {
             var op = new PitestOperation()
                     .fromProject(new BaseProject())
                     .exportLineCoverage(true);
             assertThat(op.options().get("--exportLineCoverage")).isEqualTo(TRUE);
-
-            op = new PitestOperation()
-                    .fromProject(new Project())
-                    .exportLineCoverage(false);
-            assertThat(op.options().get("--exportLineCoverage")).isEqualTo(FALSE);
         }
     }
 
@@ -140,8 +142,11 @@ class PitestOperationTest {
                     .fromProject(new BaseProject())
                     .avoidCallsTo(FOO, BAR);
             assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
+        }
 
-            op = new PitestOperation()
+        @Test
+        void avoidCallsToAsList() {
+            var op = new PitestOperation()
                     .fromProject(new Project())
                     .avoidCallsTo(List.of(FOO, BAR));
             assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
@@ -228,24 +233,38 @@ class PitestOperationTest {
                     .fromProject(new BaseProject())
                     .coverageThreshold(3);
             assertThat(op.options().get("--coverageThreshold")).isEqualTo("3");
+        }
 
-            op = new PitestOperation()
+        @Test
+        void coverageThresholdOutOfBounds() {
+            var op = new PitestOperation()
                     .fromProject(new BaseProject())
                     .coverageThreshold(101);
             assertThat(op.options().get("--coverageThreshold")).isNull();
         }
 
         @Test
-        void detectInlinedCode() {
+        void coverageThresholdOutOfBoundsNegative() {
+            var op = new PitestOperation()
+                    .fromProject(new BaseProject())
+                    .coverageThreshold(-1);
+            assertThat(op.options().get("--coverageThreshold")).isNull();
+        }
+
+        @Test
+        void detectInlinedCodeIsFalse() {
+            var op = new PitestOperation()
+                    .fromProject(new Project())
+                    .detectInlinedCode(false);
+            assertThat(op.options().get("--detectInlinedCode")).isEqualTo(FALSE);
+        }
+
+        @Test
+        void detectInlinedCodeIsTrue() {
             var op = new PitestOperation()
                     .fromProject(new BaseProject())
                     .detectInlinedCode(true);
             assertThat(op.options().get("--detectInlinedCode")).isEqualTo(TRUE);
-
-            op = new PitestOperation()
-                    .fromProject(new Project())
-                    .detectInlinedCode(false);
-            assertThat(op.options().get("--detectInlinedCode")).isEqualTo(FALSE);
         }
 
         @Test
@@ -254,8 +273,11 @@ class PitestOperationTest {
                     .fromProject(new BaseProject())
                     .features(FOO, BAR);
             assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
+        }
 
-            op = new PitestOperation()
+        @Test
+        void featuresAsList() {
+            var op = new PitestOperation()
                     .fromProject(new Project())
                     .features(List.of(FOO, BAR));
             assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
@@ -289,28 +311,35 @@ class PitestOperationTest {
         @Test
         void projectBase() {
             var op = new PitestOperation().projectBase(FOO);
-            var key = "--projectBase";
-
-            assertThat(op.options().get(key)).isEqualTo(FOO);
-
-            op = new PitestOperation().projectBase(FOO_FILE);
-            assertThat(op.options().get(key)).isEqualTo(FOO_FILE.getAbsolutePath());
-
-            op = new PitestOperation().projectBase(FOO_FILE.toPath());
-            assertThat(op.options().get(key)).isEqualTo(FOO_FILE.getAbsolutePath());
+            assertThat(op.options().get("--projectBase")).isEqualTo(FOO);
         }
 
         @Test
-        void skipFailingTests() {
+        void projectBaseAsFile() {
+            var op = new PitestOperation().projectBase(FOO_FILE);
+            assertThat(op.options().get("--projectBase")).isEqualTo(FOO_FILE.getAbsolutePath());
+        }
+
+        @Test
+        void projectBaseAsPath() {
+            var op = new PitestOperation().projectBase(FOO_FILE.toPath());
+            assertThat(op.options().get("--projectBase")).isEqualTo(FOO_FILE.getAbsolutePath());
+        }
+
+        @Test
+        void skipFailingTestsIsFalse() {
+            var op = new PitestOperation()
+                    .fromProject(new Project())
+                    .skipFailingTests(false);
+            assertThat(op.options().get("--skipFailingTests")).isEqualTo(FALSE);
+        }
+
+        @Test
+        void skipFailingTestsIsTrue() {
             var op = new PitestOperation()
                     .fromProject(new BaseProject())
                     .skipFailingTests(true);
             assertThat(op.options().get("--skipFailingTests")).isEqualTo(TRUE);
-
-            op = new PitestOperation()
-                    .fromProject(new Project())
-                    .skipFailingTests(false);
-            assertThat(op.options().get("--skipFailingTests")).isEqualTo(FALSE);
         }
 
         @Test
@@ -330,22 +359,31 @@ class PitestOperationTest {
         }
 
         @Test
-        void timestampedReports() {
+        void timestampedReportsIsFalse() {
+            var op = new PitestOperation()
+                    .fromProject(new Project())
+                    .timestampedReports(false);
+            assertThat(op.options().get("--timestampedReports")).isEqualTo(FALSE);
+        }
+
+        @Test
+        void timestampedReportsIsTrue() {
             var op = new PitestOperation()
                     .fromProject(new BaseProject())
                     .timestampedReports(true);
             assertThat(op.options().get("--timestampedReports")).isEqualTo(TRUE);
-
-            op = new PitestOperation()
-                    .fromProject(new Project())
-                    .timestampedReports(false);
-            assertThat(op.options().get("--timestampedReports")).isEqualTo(FALSE);
         }
 
         @Nested
         @DisplayName("ClassPath Tests")
         class ClassPathTests {
             private static final String CLASS_PATH = "--classPath";
+
+            @Test
+            void classPath() {
+                var op = new PitestOperation().classPath(FOO_FILE.toPath(), BAR_FILE.toPath());
+                assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
+            }
 
             @Test
             void classPathAsFile() {
@@ -376,28 +414,25 @@ class PitestOperationTest {
             }
 
             @Test
-            void classPathAsStringArray() {
-                var op = new PitestOperation().classPath(FOO_FILE.toPath(), BAR_FILE.toPath());
-                assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
-            }
-
-            @Test
             void classPathAsStringList() {
                 var op = new PitestOperation().classPathPaths(List.of(FOO_FILE.toPath(), BAR_FILE.toPath()));
                 assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
             }
 
             @Test
-            void useClasspathJar() {
+            void useClasspathJarIsFalse() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .useClasspathJar(false);
+                assertThat(op.options().get("--useClasspathJar")).isEqualTo(FALSE);
+            }
+
+            @Test
+            void useClasspathJarIsTrue() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
                         .useClasspathJar(true);
                 assertThat(op.options().get("--useClasspathJar")).isEqualTo(TRUE);
-
-                op = new PitestOperation()
-                        .fromProject(new Project())
-                        .useClasspathJar(false);
-                assertThat(op.options().get("--useClasspathJar")).isEqualTo(FALSE);
             }
         }
 
@@ -410,11 +445,22 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .excludedClasses(FOO, BAR);
                 assertThat(op.options().get("--excludedClasses")).isEqualTo(FOOBAR);
+            }
 
-                op = new PitestOperation()
+            @Test
+            void excludedClassesAsList() {
+                var op = new PitestOperation()
                         .fromProject(new Project())
                         .excludedClasses(Set.of(FOO, BAR));
                 assertThat(op.options().get("--excludedClasses")).contains(",");
+            }
+
+            @Test
+            void excludedGroups() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .excludedGroups(FOO, BAR);
+                assertThat(op.options().get("--excludedGroups")).isEqualTo(FOOBAR);
             }
 
             @Test
@@ -422,14 +468,6 @@ class PitestOperationTest {
                 var op = new PitestOperation()
                         .fromProject(new Project())
                         .excludedGroups(List.of(FOO, BAR));
-                assertThat(op.options().get("--excludedGroups")).isEqualTo(FOOBAR);
-            }
-
-            @Test
-            void excludedGroupsAsStringArray() {
-                var op = new PitestOperation()
-                        .fromProject(new BaseProject())
-                        .excludedGroups(FOO, BAR);
                 assertThat(op.options().get("--excludedGroups")).isEqualTo(FOOBAR);
             }
 
@@ -455,18 +493,18 @@ class PitestOperationTest {
             }
 
             @Test
-            void excludedTestsAsList() {
+            void excludedTests() {
                 var op = new PitestOperation()
-                        .fromProject(new Project())
-                        .excludedTestClasses(List.of(FOO, BAR));
+                        .fromProject(new BaseProject())
+                        .excludedTestClasses(FOO, BAR);
                 assertThat(op.options().get("--excludedTestClasses")).isEqualTo(FOOBAR);
             }
 
             @Test
-            void excludedTestsAsStringArray() {
+            void excludedTestsAsList() {
                 var op = new PitestOperation()
-                        .fromProject(new BaseProject())
-                        .excludedTestClasses(FOO, BAR);
+                        .fromProject(new Project())
+                        .excludedTestClasses(List.of(FOO, BAR));
                 assertThat(op.options().get("--excludedTestClasses")).isEqualTo(FOOBAR);
             }
         }
@@ -517,16 +555,19 @@ class PitestOperationTest {
         @DisplayName("Include Test")
         class IncludeTest {
             @Test
-            void includeLaunchClasspath() {
+            void includeLaunchClasspathIsFalse() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .includeLaunchClasspath(false);
+                assertThat(op.options().get("--includeLaunchClasspath")).isEqualTo(FALSE);
+            }
+
+            @Test
+            void includeLaunchClasspathIsTrue() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
                         .includeLaunchClasspath(true);
                 assertThat(op.options().get("--includeLaunchClasspath")).isEqualTo(TRUE);
-
-                op = new PitestOperation()
-                        .fromProject(new Project())
-                        .includeLaunchClasspath(false);
-                assertThat(op.options().get("--includeLaunchClasspath")).isEqualTo(FALSE);
             }
 
             @Test
@@ -535,8 +576,11 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .includedGroups(FOO, BAR);
                 assertThat(op.options().get("--includedGroups")).isEqualTo(FOOBAR);
+            }
 
-                op = new PitestOperation()
+            @Test
+            void includedGroupsAsList() {
+                var op = new PitestOperation()
                         .fromProject(new Project())
                         .includedGroups(List.of(FOO, BAR));
                 assertThat(op.options().get("--includedGroups")).isEqualTo(FOOBAR);
@@ -560,8 +604,11 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .jvmArgs(FOO, BAR);
                 assertThat(op.options().get("--jvmArgs")).isEqualTo(FOOBAR);
+            }
 
-                op = new PitestOperation()
+            @Test
+            void jvmArgsAsList() {
+                var op = new PitestOperation()
                         .fromProject(new Project())
                         .jvmArgs(List.of(FOO, BAR));
                 assertThat(op.options().get("--jvmArgs")).isEqualTo(FOOBAR);
@@ -571,11 +618,17 @@ class PitestOperationTest {
             void jvmPath() {
                 var op = new PitestOperation().jvmPath(FOO);
                 assertThat(op.options().get("--jvmPath")).isEqualTo(FOO);
+            }
 
-                op = new PitestOperation().jvmPath(FOO_FILE);
+            @Test
+            void jvmPathAsFile() {
+                var op = new PitestOperation().jvmPath(FOO_FILE);
                 assertThat(op.options().get("--jvmPath")).isEqualTo(FOO_FILE.getAbsolutePath());
+            }
 
-                op = new PitestOperation().jvmPath(FOO_FILE.toPath());
+            @Test
+            void jvmPathAsPath() {
+                var op = new PitestOperation().jvmPath(FOO_FILE.toPath());
                 assertThat(op.options().get("--jvmPath")).isEqualTo(FOO_FILE.getAbsolutePath());
             }
         }
@@ -583,28 +636,30 @@ class PitestOperationTest {
         @Nested
         @DisplayName("Mutable Code Paths Tests")
         class MutableCodePathsTests {
-
             private static final String MUTABLE_CODE_PATHS = "--mutableCodePaths";
+
+            @Test
+            void mutableCodePaths() {
+                var op = new PitestOperation().mutableCodePaths(FOO, BAR);
+                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR);
+            }
 
             @Test
             void mutableCodePathsAsFileArray() {
                 var op = new PitestOperation().mutableCodePaths(FOO_FILE, BAR_FILE);
                 assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
-
             }
 
             @Test
             void mutableCodePathsAsFileList() {
                 var op = new PitestOperation().mutableCodePathsFiles(List.of(FOO_FILE, BAR_FILE));
                 assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
-
             }
 
             @Test
             void mutableCodePathsAsPathArray() {
                 var op = new PitestOperation().mutableCodePaths(FOO_FILE.toPath(), BAR_FILE.toPath());
                 assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
-
             }
 
             @Test
@@ -614,16 +669,9 @@ class PitestOperationTest {
             }
 
             @Test
-            void mutableCodePathsAsStringArray() {
-                var op = new PitestOperation().mutableCodePaths(FOO, BAR);
-                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR);
-            }
-
-            @Test
             void mutableCodePathsAsStringList() {
                 var op = new PitestOperation().mutableCodePaths(List.of(FOO, BAR));
                 assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR);
-
             }
         }
 
@@ -631,20 +679,31 @@ class PitestOperationTest {
         @DisplayName("Mutation Tests")
         class MutationTests {
             @Test
-            void failWhenNoMutations() {
+            void failWhenNoMutationsIsFalse() {
                 var op = new PitestOperation()
-                        .fromProject(new BaseProject())
-                        .failWhenNoMutations(true);
-                assertThat(op.options().get("--failWhenNoMutations")).isEqualTo(TRUE);
-
-                op = new PitestOperation()
                         .fromProject(new Project())
                         .failWhenNoMutations(false);
                 assertThat(op.options().get("--failWhenNoMutations")).isEqualTo(FALSE);
             }
 
             @Test
-            void fullMutationMatrix() {
+            void failWhenNoMutationsIsTrue() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .failWhenNoMutations(true);
+                assertThat(op.options().get("--failWhenNoMutations")).isEqualTo(TRUE);
+            }
+
+            @Test
+            void fullMutationMatrixIsFalse() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .fullMutationMatrix(false);
+                assertThat(op.options().get("--fullMutationMatrix")).isEqualTo(FALSE);
+            }
+
+            @Test
+            void fullMutationMatrixIsTrue() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
                         .fullMutationMatrix(true);
@@ -673,10 +732,21 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .mutationThreshold(3);
                 assertThat(op.options().get("--mutationThreshold")).isEqualTo("3");
+            }
 
-                op = new PitestOperation()
+            @Test
+            void mutationThresholdOutOfBounds() {
+                var op = new PitestOperation()
                         .fromProject(new BaseProject())
                         .mutationThreshold(101);
+                assertThat(op.options().get("--mutationThreshold")).isNull();
+            }
+
+            @Test
+            void mutationThresholdOutOfBoundsNegative() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .mutationThreshold(-1);
                 assertThat(op.options().get("--mutationThreshold")).isNull();
             }
 
@@ -694,8 +764,11 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .mutators(FOO, BAR);
                 assertThat(op.options().get("--mutators")).isEqualTo(FOOBAR);
+            }
 
-                op = new PitestOperation()
+            @Test
+            void mutatorsAsList() {
+                var op = new PitestOperation()
                         .fromProject(new Project())
                         .mutators(List.of(FOO, BAR));
                 assertThat(op.options().get("--mutators")).isEqualTo(FOOBAR);
@@ -719,24 +792,27 @@ class PitestOperationTest {
             @DisplayName("Output Formats Tests")
             class OutputFormatsTests {
                 @Test
+                void outputFormats() {
+                    var op = new PitestOperation().outputFormats(FOO, BAR);
+                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOO + ',' + BAR);
+                }
+
+                @Test
                 void outputFormatsAsFileArray() {
                     var op = new PitestOperation().outputFormats(FOO_FILE, BAR_FILE);
                     assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-
                 }
 
                 @Test
                 void outputFormatsAsFileList() {
                     var op = new PitestOperation().outputFormatsFiles(List.of(FOO_FILE, BAR_FILE));
                     assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-
                 }
 
                 @Test
                 void outputFormatsAsPathArray() {
                     var op = new PitestOperation().outputFormats(FOO_FILE.toPath(), BAR_FILE.toPath());
                     assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-
                 }
 
                 @Test
@@ -746,16 +822,9 @@ class PitestOperationTest {
                 }
 
                 @Test
-                void outputFormatsAsStringArray() {
-                    var op = new PitestOperation().outputFormats(FOO, BAR);
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOO + ',' + BAR);
-                }
-
-                @Test
                 void outputFormatsAsStringList() {
                     var op = new PitestOperation().outputFormats(List.of(FOO, BAR));
                     assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOO + ',' + BAR);
-
                 }
             }
         }
@@ -790,6 +859,12 @@ class PitestOperationTest {
             private static final String SOURCE_DIRS = "--sourceDirs";
 
             @Test
+            void sourceDirs() {
+                var op = new PitestOperation().sourceDirs(FOO, BAR);
+                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOO + ',' + BAR);
+            }
+
+            @Test
             void sourceDirsAsFileArray() {
                 var op = new PitestOperation().sourceDirs(FOO_FILE, BAR_FILE);
                 assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR_FORMAT);
@@ -814,12 +889,6 @@ class PitestOperationTest {
             }
 
             @Test
-            void sourceDirsAsStringArray() {
-                var op = new PitestOperation().sourceDirs(FOO, BAR);
-                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOO + ',' + BAR);
-            }
-
-            @Test
             void sourceDirsAsStringList() {
                 var op = new PitestOperation().sourceDirs(List.of(FOO, BAR));
                 assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOO + ',' + BAR);
@@ -835,8 +904,11 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .targetClasses(FOO, BAR);
                 assertThat(op.options().get("--targetClasses")).isEqualTo(FOOBAR);
+            }
 
-                op = new PitestOperation()
+            @Test
+            void targetClassesAsList() {
+                var op = new PitestOperation()
                         .fromProject(new Project())
                         .targetClasses(List.of(FOO, BAR));
                 assertThat(op.options().get("--targetClasses")).isEqualTo(FOOBAR);
@@ -848,8 +920,11 @@ class PitestOperationTest {
                         .fromProject(new BaseProject())
                         .targetTests(FOO, BAR);
                 assertThat(op.options().get("--targetTests")).isEqualTo(FOOBAR);
+            }
 
-                op = new PitestOperation()
+            @Test
+            void targetTestsAsList() {
+                var op = new PitestOperation()
                         .fromProject(new Project())
                         .targetTests(List.of(FOO, BAR));
                 assertThat(op.options().get("--targetTests")).isEqualTo(FOOBAR);
@@ -880,16 +955,19 @@ class PitestOperationTest {
         @DisplayName("Verbose Tests")
         class VerboseTests {
             @Test
-            void verbose() {
+            void verboseIsFalse() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .verbose(false);
+                assertThat(op.options().get("--verbose")).isEqualTo(FALSE);
+            }
+
+            @Test
+            void verboseIsTrue() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
                         .verbose(true);
                 assertThat(op.options().get("--verbose")).isEqualTo(TRUE);
-
-                op = new PitestOperation()
-                        .fromProject(new Project())
-                        .verbose(false);
-                assertThat(op.options().get("--verbose")).isEqualTo(FALSE);
             }
 
             @Test
