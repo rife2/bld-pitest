@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static rife.bld.extension.PitestOperation.FALSE;
 import static rife.bld.extension.PitestOperation.TRUE;
 
-class PitestOperationTest {
+class PitestOperationTests {
     private static final String BAR = "bar";
     private static final File BAR_FILE = new File(BAR);
     private static final String FOO = "foo";
