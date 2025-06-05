@@ -29,13 +29,13 @@ public class ExamplesBuild extends Project {
 
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var pitest = version(1, 19, 4);
+        var pitest = version(1, 19, 5);
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 3)))
-                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 12, 2)))
-                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 12, 2)));
+                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 13, 0)))
+                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 13, 0)));
     }
 
     public static void main(String[] args) {
