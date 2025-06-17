@@ -48,8 +48,8 @@ Don't forget to add the Pitest `test` dependencies to your build file, as they a
 ```java
 repositories = List.of(MAVEN_CENTRAL);
 scope(test)
-    .include(dependency("org.pitest", "pitest", version(1, 19, 5)))
-    .include(dependency("org.pitest", "pitest-command-line", version(1, 19, 5)))
+    .include(dependency("org.pitest", "pitest", version(1, 19, 6)))
+    .include(dependency("org.pitest", "pitest-command-line", version(1, 19, 6)))
     .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 2)))
     .include(dependency("org.pitest", "pitest-testng-plugin", version(1, 0, 0)));
 ```
