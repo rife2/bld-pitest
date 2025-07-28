@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.io.TempDir;
 import rife.bld.BaseProject;
 import rife.bld.Project;
 import rife.bld.WebProject;
@@ -30,6 +31,7 @@ import rife.bld.operations.exceptions.ExitStatusException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
@@ -51,13 +53,14 @@ class PitestOperationTests {
     @Nested
     @DisplayName("Execute Tests")
     class ExecuteTests {
+        @TempDir
+        private Path tmpDir;
+
         @Test
-        void execute() throws IOException {
-            var tmpDir = Files.createTempDirectory("bld-pitest-");
-            tmpDir.toFile().deleteOnExit();
+        void execute() {
             var op = new PitestOperation().
                     fromProject(new WebProject())
-                    .reportDir(tmpDir.toAbsolutePath().toString())
+                    .reportDir(tmpDir)
                     .targetClasses("com.example.*")
                     .targetTests("com.example.*")
                     .verbose(true)
