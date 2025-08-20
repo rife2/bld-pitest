@@ -36,3 +36,9 @@ jobs:
 
       - name: Run tests
         run: ./bld compile test
+
+      - name: Run reporter
+        if: ${{ failure() }}
+        run: ./bld reporter
+
+

@@ -5,6 +5,7 @@
     <pattern value="rife.bld.extension.PitestOperationBuild" />
     <pattern value="rife.bld.extension.PitestOperationBuild" method="pmd" />
     <pattern value="rife.bld.extension.PitestOperationBuild" method="pmdCli" />
+    <pattern value="rife.bld.extension.PitestOperationBuild" method="reporter" />
   </component>
   <component name="PDMPlugin">
     <option name="customRuleSets">
