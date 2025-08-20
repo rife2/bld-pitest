@@ -59,7 +59,7 @@ public class PitestOperationBuild extends Project {
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 3)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 13, 4)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 13, 4)))
-                .include(dependency("org.assertj", "assertj-core", version(3, 27, 3)));
+                .include(dependency("org.assertj", "assertj-core", version(3, 27, 4)));
 
         javadocOperation()
                 .javadocOptions()
