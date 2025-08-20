@@ -1,6 +1,4 @@
-# [PIT Mutation Testing](https://pitest.org/) Extension for
-
-[b<span style="color:orange">l</span>d](https://rife2.com/bld)
+# [PIT Mutation Testing](https://pitest.org/) Extension for [b<span style="color:orange">l</span>d](https://rife2.com/bld)
 
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/java-17%2B-blue)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
@@ -55,8 +53,8 @@ are not provided by the extension. For example:
 ```java
 repositories = List.of(MAVEN_CENTRAL);
 scope(test)
-    .include(dependency("org.pitest", "pitest", version(1, 20, 1)))
-    .include(dependency("org.pitest", "pitest-command-line", version(1, 20, 1)))
-    .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 2)))
+    .include(dependency("org.pitest", "pitest", version(1, 20, 2)))
+    .include(dependency("org.pitest", "pitest-command-line", version(1, 20, 2)))
+    .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 3)))
     .include(dependency("org.pitest", "pitest-testng-plugin", version(1, 0, 0)));
 ```
