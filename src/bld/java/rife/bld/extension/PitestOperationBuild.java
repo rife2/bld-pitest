@@ -40,8 +40,9 @@ public class PitestOperationBuild extends Project {
 
     public PitestOperationBuild() {
         pkg = "rife.bld.extension";
-        name = "PitestExtension";
-        version = version(1, 0, 11, "SNAPSHOT");
+        name = "PIT Mutation Testing";
+        archiveBaseName = "bld-pitest";
+        version = version(1, 0, 11);
 
         javaRelease = 17;
 
@@ -74,9 +75,9 @@ public class PitestOperationBuild extends Project {
                 .repository(repository("github"))
                 .info()
                 .groupId("com.uwyn.rife2")
-                .artifactId("bld-pitest")
+                .artifactId(archiveBaseName)
                 .description("PIT Mutation Testing Extension for bld")
-                .url("https://github.com/rife2/bld-pitest")
+                .url("https://github.com/rife2/" + archiveBaseName)
                 .developer(new PublishDeveloper()
                         .id("ethauvin")
                         .name("Erik C. Thauvin")
@@ -88,9 +89,9 @@ public class PitestOperationBuild extends Project {
                         .url("https://www.apache.org/licenses/LICENSE-2.0.txt")
                 )
                 .scm(new PublishScm()
-                        .connection("scm:git:https://github.com/rife2/bld-pitest.git")
-                        .developerConnection("scm:git:git@github.com:rife2/bld-pitest.git")
-                        .url("https://github.com/rife2/bld-pitest")
+                        .connection("scm:git:https://github.com/rife2/" + archiveBaseName + ".git")
+                        .developerConnection("scm:git:git@github.com:rife2/" + archiveBaseName + ".git")
+                        .url("https://github.com/rife2/" + archiveBaseName)
                 )
                 .signKey(property("sign.key"))
                 .signPassphrase(property("sign.passphrase"));
