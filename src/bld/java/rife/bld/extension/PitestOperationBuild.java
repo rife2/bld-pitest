@@ -50,7 +50,7 @@ public class PitestOperationBuild extends Project {
 
         repositories = List.of(MAVEN_LOCAL, MAVEN_CENTRAL, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
-        var pitest = version(1, 20, 3);
+        var pitest = version(1, 20, 4);
         var junit = version(6, 0, 0);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(2, 3, 0)));
