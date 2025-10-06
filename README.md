@@ -53,8 +53,8 @@ are not provided by the extension. For example:
 ```java
 repositories = List.of(MAVEN_CENTRAL);
 scope(test)
-    .include(dependency("org.pitest", "pitest", version(1, 20, 4)))
-    .include(dependency("org.pitest", "pitest-command-line", version(1, 20, 4)))
+    .include(dependency("org.pitest", "pitest", version(1, 20, 5)))
+    .include(dependency("org.pitest", "pitest-command-line", version(1, 20, 5)))
     .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 3)))
     .include(dependency("org.pitest", "pitest-testng-plugin", version(1, 0, 0)));
 ```

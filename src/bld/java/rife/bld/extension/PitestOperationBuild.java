@@ -42,7 +42,7 @@ public class PitestOperationBuild extends Project {
         pkg = "rife.bld.extension";
         name = "PIT Mutation Testing";
         archiveBaseName = "bld-pitest";
-        version = version(1, 0, 11);
+        version = version(1, 0, 12, "SNAPSHOT");
 
         javaRelease = 17;
 
@@ -51,7 +51,7 @@ public class PitestOperationBuild extends Project {
 
         repositories = List.of(MAVEN_LOCAL, MAVEN_CENTRAL, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
-        var pitest = version(1, 20, 4);
+        var pitest = version(1, 20, 5);
         var junit = version(6, 0, 0);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(2, 3, 0)));
