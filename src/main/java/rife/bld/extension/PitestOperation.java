@@ -16,6 +16,7 @@
 
 package rife.bld.extension;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
 import rife.bld.operations.AbstractProcessOperation;
 import rife.bld.operations.exceptions.ExitStatusException;
@@ -48,6 +49,67 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     private final Map<String, String> options_ = new ConcurrentHashMap<>();
     private BaseProject project_;
 
+    @Override
+    public void execute() throws IOException, InterruptedException, ExitStatusException {
+        if (project_ == null) {
+            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                LOGGER.severe("A project must be specified.");
+            }
+            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
+        } else {
+            super.execute();
+        }
+    }
+
+    /**
+     * Part of the {@link #execute} operation, constructs the command list
+     * to use for building the process.
+     */
+    @Override
+    protected List<String> executeConstructProcessCommandList() {
+        final List<String> args = new ArrayList<>();
+
+        if (project_ != null) {
+            args.add(javaTool());
+            args.add("-cp");
+            args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
+                    joinClasspathJar(project_.compileClasspathJars()),
+                    joinClasspathJar(project_.providedClasspathJars()),
+                    project_.buildMainDirectory().getAbsolutePath(), project_.buildTestDirectory().getAbsolutePath()));
+            args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
+
+            if (!options_.containsKey(SOURCE_DIRS)) {
+                options_.put(SOURCE_DIRS, project_.srcDirectory().getPath());
+            }
+
+            options_.forEach((k, v) -> {
+                args.add(k);
+                if (!v.isEmpty()) {
+                    args.add(v);
+                }
+            });
+        }
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(String.join(" ", args));
+        }
+
+        return args;
+    }
+
+    /**
+     * Configures the operation from a {@link BaseProject}.
+     *
+     * @param project the project to configure the operation from
+     * @since 1.5
+     */
+    @Override
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public PitestOperation fromProject(BaseProject project) {
+        project_ = project;
+        return this;
+    }
+
     /**
      * Line arguments for child JVMs.
      *
@@ -60,7 +122,6 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         }
         return this;
     }
-
 
     /**
      * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
@@ -107,19 +168,6 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     public PitestOperation avoidCallsTo(String... avoidCallTo) {
         return avoidCallsTo(List.of(avoidCallTo));
-    }
-
-    private String buildClassPath(String... path) {
-        var classpath = new StringBuilder();
-        for (var p : path) {
-            if (!p.isBlank()) {
-                if (!classpath.isEmpty()) {
-                    classpath.append(File.pathSeparator);
-                }
-                classpath.append(p);
-            }
-        }
-        return classpath.toString();
     }
 
     /**
@@ -422,66 +470,6 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         return this;
     }
 
-    @Override
-    public void execute() throws IOException, InterruptedException, ExitStatusException {
-        if (project_ == null) {
-            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                LOGGER.severe("A project must be specified.");
-            }
-            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
-        } else {
-            super.execute();
-        }
-    }
-
-    /**
-     * Part of the {@link #execute} operation, constructs the command list
-     * to use for building the process.
-     */
-    @Override
-    protected List<String> executeConstructProcessCommandList() {
-        final List<String> args = new ArrayList<>();
-
-        if (project_ != null) {
-            args.add(javaTool());
-            args.add("-cp");
-            args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
-                    joinClasspathJar(project_.compileClasspathJars()),
-                    joinClasspathJar(project_.providedClasspathJars()),
-                    project_.buildMainDirectory().getAbsolutePath(), project_.buildTestDirectory().getAbsolutePath()));
-            args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
-
-            if (!options_.containsKey(SOURCE_DIRS)) {
-                options_.put(SOURCE_DIRS, project_.srcDirectory().getPath());
-            }
-
-            options_.forEach((k, v) -> {
-                args.add(k);
-                if (!v.isEmpty()) {
-                    args.add(v);
-                }
-            });
-        }
-
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine(String.join(" ", args));
-        }
-
-        return args;
-    }
-
-    /**
-     * Configures the operation from a {@link BaseProject}.
-     *
-     * @param project the project to configure the operation from
-     * @since 1.5
-     */
-    @Override
-    public PitestOperation fromProject(BaseProject project) {
-        project_ = project;
-        return this;
-    }
-
     /**
      * Whether or not to dump per test line coverage data to disk.
      * <p>
@@ -691,21 +679,6 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             options_.put("--inputEncoding", encoding);
         }
         return this;
-    }
-
-    /*
-     * Determines if a string is not blank.
-     */
-    private boolean isNotBlank(String s) {
-        return s != null && !s.isBlank();
-    }
-
-    private String joinClasspathJar(List<File> jars) {
-        if (!jars.isEmpty()) {
-            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
-        } else {
-            return "";
-        }
     }
 
     /**
@@ -970,6 +943,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @return the map of options
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Map<String, String> options() {
         return options_;
     }
@@ -1117,7 +1091,6 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation projectBase(Path file) {
         return projectBase(file.toFile());
     }
-
 
     /**
      * Output directory for the reports.
@@ -1417,5 +1390,33 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation verbosity(String verbosity) {
         options_.put("--verbosity", verbosity);
         return this;
+    }
+
+    private String buildClassPath(String... path) {
+        var classpath = new StringBuilder();
+        for (var p : path) {
+            if (!p.isBlank()) {
+                if (!classpath.isEmpty()) {
+                    classpath.append(File.pathSeparator);
+                }
+                classpath.append(p);
+            }
+        }
+        return classpath.toString();
+    }
+
+    /*
+     * Determines if a string is not blank.
+     */
+    private boolean isNotBlank(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    private String joinClasspathJar(List<File> jars) {
+        if (!jars.isEmpty()) {
+            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
+        } else {
+            return "";
+        }
     }
 }
