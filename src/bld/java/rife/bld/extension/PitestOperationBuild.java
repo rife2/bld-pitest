@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 the original author or authors.
+ * Copyright 2023-2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,6 +97,10 @@ public class PitestOperationBuild extends Project {
                 .signPassphrase(property("sign.passphrase"));
     }
 
+    public static void main(String[] args) {
+        new PitestOperationBuild().start(args);
+    }
+
     @Override
     public void test() throws Exception {
         if (ExecOperation.isLinux()) {
@@ -110,10 +114,6 @@ public class PitestOperationBuild extends Project {
         var op = testOperation().fromProject(this);
         op.testToolOptions().reportsDir(new File(testResultsDir));
         op.execute();
-    }
-
-    public static void main(String[] args) {
-        new PitestOperationBuild().start(args);
     }
 
     @BuildCommand(summary = "Runs PMD analysis")
