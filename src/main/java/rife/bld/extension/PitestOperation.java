@@ -18,6 +18,8 @@ package rife.bld.extension;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
+import rife.bld.extension.tools.ClassPathUtils;
+import rife.bld.extension.tools.TextUtils;
 import rife.bld.operations.AbstractProcessOperation;
 import rife.bld.operations.exceptions.ExitStatusException;
 
@@ -72,9 +74,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         if (project_ != null) {
             args.add(javaTool());
             args.add("-cp");
-            args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
-                    joinClasspathJar(project_.compileClasspathJars()),
-                    joinClasspathJar(project_.providedClasspathJars()),
+            args.add(ClassPathUtils.buildClassPath(ClassPathUtils.joinClasspathJar(project_.testClasspathJars()),
+                    ClassPathUtils.joinClasspathJar(project_.compileClasspathJars()),
+                    ClassPathUtils.joinClasspathJar(project_.providedClasspathJars()),
                     project_.buildMainDirectory().getAbsolutePath(), project_.buildTestDirectory().getAbsolutePath()));
             args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
@@ -117,7 +119,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation argLine(String line) {
-        if (isNotBlank(line)) {
+        if (TextUtils.isNotBlank(line)) {
             options_.put("--argLine", line);
         }
         return this;
@@ -143,7 +145,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #avoidCallsTo(String...)
      */
     public PitestOperation avoidCallsTo(Collection<String> avoidCallsTo) {
-        options_.put("--avoidCallsTo", String.join(",", avoidCallsTo.stream().filter(this::isNotBlank).toList()));
+        options_.put("--avoidCallsTo", String.join(",", avoidCallsTo.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -226,7 +228,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPath(String...)
      */
     public PitestOperation classPath(Collection<String> path) {
-        options_.put("--classPath", String.join(",", path.stream().filter(this::isNotBlank).toList()));
+        options_.put("--classPath", String.join(",", path.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -261,7 +263,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation classPathFile(String file) {
-        if (isNotBlank(file)) {
+        if (TextUtils.isNotBlank(file)) {
             options_.put("--classPathFile", file);
         }
         return this;
@@ -380,7 +382,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedClasses(String...)
      */
     public PitestOperation excludedClasses(Collection<String> excludedClasses) {
-        options_.put("--excludedClasses", String.join(",", excludedClasses.stream().filter(this::isNotBlank).toList()));
+        options_.put("--excludedClasses",
+                String.join(",", excludedClasses.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -405,7 +408,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedGroups(String...)
      */
     public PitestOperation excludedGroups(Collection<String> excludedGroups) {
-        options_.put("--excludedGroups", String.join(",", excludedGroups.stream().filter(this::isNotBlank).toList()));
+        options_.put("--excludedGroups", String.join(",",
+                excludedGroups.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -429,7 +433,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     public PitestOperation excludedMethods(Collection<String> excludedMethods) {
         options_.put("--excludedMethods",
-                String.join(",", excludedMethods.stream().filter(this::isNotBlank).toList()));
+                String.join(",", excludedMethods.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -466,7 +470,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     public PitestOperation excludedTestClasses(Collection<String> testClasses) {
         options_.put("--excludedTestClasses",
-                String.join(",", testClasses.stream().filter(this::isNotBlank).toList()));
+                String.join(",", testClasses.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -512,7 +516,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #features(String...)
      */
     public PitestOperation features(Collection<String> feature) {
-        options_.put("--features", String.join(",", feature.stream().filter(this::isNotBlank).toList()));
+        options_.put("--features", String.join(",", feature.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -549,7 +553,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation historyInputLocation(String path) {
-        if (isNotBlank(path)) {
+        if (TextUtils.isNotBlank(path)) {
             options_.put("--historyInputLocation", path);
         }
         return this;
@@ -583,7 +587,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation historyOutputLocation(String path) {
-        if (isNotBlank(path)) {
+        if (TextUtils.isNotBlank(path)) {
             options_.put("--historyOutputLocation", path);
         }
         return this;
@@ -651,7 +655,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #includedGroups(String...)
      */
     public PitestOperation includedGroups(Collection<String> includedGroups) {
-        options_.put("--includedGroups", String.join(",", includedGroups.stream().filter(this::isNotBlank).toList()));
+        options_.put("--includedGroups",
+                String.join(",", includedGroups.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -675,7 +680,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation inputEncoding(String encoding) {
-        if (isNotBlank(encoding)) {
+        if (TextUtils.isNotBlank(encoding)) {
             options_.put("--inputEncoding", encoding);
         }
         return this;
@@ -702,7 +707,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmArgs(String...)
      */
     public PitestOperation jvmArgs(Collection<String> args) {
-        options_.put("--jvmArgs", String.join(",", args.stream().filter(this::isNotBlank).toList()));
+        options_.put("--jvmArgs", String.join(",",
+                args.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -714,7 +720,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation jvmPath(String path) {
-        if (isNotBlank(path)) {
+        if (TextUtils.isNotBlank(path)) {
             options_.put("--jvmPath", path);
         }
         return this;
@@ -833,7 +839,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePaths(String...)
      */
     public PitestOperation mutableCodePaths(Collection<String> paths) {
-        options_.put("--mutableCodePaths", String.join(",", paths.stream().filter(this::isNotBlank).toList()));
+        options_.put("--mutableCodePaths",
+                String.join(",", paths.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -922,7 +929,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutators(Collection)
      */
     public PitestOperation mutators(String... mutator) {
-        options_.put("--mutators", String.join(",", Arrays.stream(mutator).filter(this::isNotBlank).toList()));
+        options_.put("--mutators", String.join(",", Arrays.stream(mutator).filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -934,7 +941,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutators(String...)
      */
     public PitestOperation mutators(Collection<String> mutators) {
-        options_.put("--mutators", String.join(",", mutators.stream().filter(this::isNotBlank).toList()));
+        options_.put("--mutators", String.join(",", mutators.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -957,7 +964,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation outputEncoding(String encoding) {
-        if (isNotBlank(encoding)) {
+        if (TextUtils.isNotBlank(encoding)) {
             options_.put("--outputEncoding", encoding);
         }
         return this;
@@ -1016,7 +1023,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormats(String...)
      */
     public PitestOperation outputFormats(Collection<String> outputFormats) {
-        options_.put("--outputFormats", String.join(",", outputFormats.stream().filter(this::isNotBlank).toList()));
+        options_.put("--outputFormats",
+                String.join(",", outputFormats.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -1099,7 +1107,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation reportDir(String dir) {
-        if (isNotBlank(dir)) {
+        if (TextUtils.isNotBlank(dir)) {
             options_.put("--reportDir", dir);
         }
         return this;
@@ -1183,7 +1191,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirs(String...)
      */
     public PitestOperation sourceDirs(Collection<String> dirs) {
-        options_.put(SOURCE_DIRS, String.join(",", dirs.stream().filter(this::isNotBlank).toList()));
+        options_.put(SOURCE_DIRS, String.join(",", dirs.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -1224,7 +1232,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetClasses(Collection)
      */
     public PitestOperation targetClasses(Collection<String> targetClass) {
-        options_.put("--targetClasses", String.join(",", targetClass.stream().filter(this::isNotBlank).toList()));
+        options_.put("--targetClasses",
+                String.join(",", targetClass.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -1274,7 +1283,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetTests(String...)
      */
     public PitestOperation targetTests(Collection<String> tests) {
-        options_.put("--targetTests", String.join(",", tests.stream().filter(this::isNotBlank).toList()));
+        options_.put("--targetTests", String.join(",", tests.stream().filter(TextUtils::isNotBlank).toList()));
         return this;
     }
 
@@ -1390,33 +1399,5 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation verbosity(String verbosity) {
         options_.put("--verbosity", verbosity);
         return this;
-    }
-
-    private String buildClassPath(String... path) {
-        var classpath = new StringBuilder();
-        for (var p : path) {
-            if (!p.isBlank()) {
-                if (!classpath.isEmpty()) {
-                    classpath.append(File.pathSeparator);
-                }
-                classpath.append(p);
-            }
-        }
-        return classpath.toString();
-    }
-
-    /*
-     * Determines if a string is not blank.
-     */
-    private boolean isNotBlank(String s) {
-        return s != null && !s.isBlank();
-    }
-
-    private String joinClasspathJar(List<File> jars) {
-        if (!jars.isEmpty()) {
-            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
-        } else {
-            return "";
-        }
     }
 }
