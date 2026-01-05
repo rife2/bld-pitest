@@ -38,6 +38,7 @@ import java.util.logging.Logger;
  * @since 1.0
  */
 public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
+
     /**
      * False constant.
      */
@@ -74,10 +75,17 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         if (project_ != null) {
             args.add(javaTool());
             args.add("-cp");
-            args.add(ClasspathUtils.buildClasspath(ClasspathUtils.joinClasspathJar(project_.testClasspathJars()),
-                    ClasspathUtils.joinClasspathJar(project_.compileClasspathJars()),
-                    ClasspathUtils.joinClasspathJar(project_.providedClasspathJars()),
-                    project_.buildMainDirectory().getAbsolutePath(), project_.buildTestDirectory().getAbsolutePath()));
+            args.add(
+                    ClasspathUtils.buildClasspath(
+                            ClasspathUtils.joinClasspathJar(
+                                    project_.testClasspathJars(),
+                                    project_.compileClasspathJars(),
+                                    project_.providedClasspathJars()
+                            ),
+                            project_.buildMainDirectory().getAbsolutePath(),
+                            project_.buildTestDirectory().getAbsolutePath()
+                    )
+            );
             args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
             if (!options_.containsKey(SOURCE_DIRS)) {
