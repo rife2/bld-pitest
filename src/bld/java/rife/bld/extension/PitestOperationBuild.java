@@ -30,6 +30,7 @@ import static rife.bld.dependencies.Scope.*;
 import static rife.bld.operations.JavadocOptions.DocLinkOption.NO_MISSING;
 
 public class PitestOperationBuild extends Project {
+
     final PmdOperation pmdOp = new PmdOperation()
             .fromProject(this)
             .failOnViolation(true)
@@ -99,10 +100,6 @@ public class PitestOperationBuild extends Project {
                 .signPassphrase(property("sign.passphrase"));
     }
 
-    public static void main(String[] args) {
-        new PitestOperationBuild().start(args);
-    }
-
     @Override
     public void test() throws Exception {
         if (ExecOperation.isLinux()) {
@@ -116,6 +113,10 @@ public class PitestOperationBuild extends Project {
         var op = testOperation().fromProject(this);
         op.testToolOptions().reportsDir(new File(testResultsDir));
         op.execute();
+    }
+
+    public static void main(String[] args) {
+        new PitestOperationBuild().start(args);
     }
 
     @BuildCommand(summary = "Runs PMD analysis")

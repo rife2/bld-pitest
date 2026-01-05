@@ -42,6 +42,7 @@ import static rife.bld.extension.PitestOperation.FALSE;
 import static rife.bld.extension.PitestOperation.TRUE;
 
 class PitestOperationTests {
+
     private static final String BAR = "bar";
     private static final File BAR_FILE = new File(BAR);
     private static final String FOO = "foo";
@@ -53,6 +54,7 @@ class PitestOperationTests {
     @Nested
     @DisplayName("Execute Tests")
     class ExecuteTests {
+
         @TempDir
         private Path tmpDir;
 
@@ -131,6 +133,7 @@ class PitestOperationTests {
     @Nested
     @DisplayName("Options Tests")
     class OptionsTests {
+
         @Test
         void argLine() {
             var op = new PitestOperation()
@@ -380,6 +383,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("ClassPath Tests")
         class ClassPathTests {
+
             private static final String CLASS_PATH = "--classPath";
 
             @Test
@@ -442,6 +446,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Excluded Tests")
         class ExcludedTests {
+
             @Test
             void excludedClasses() {
                 var op = new PitestOperation()
@@ -515,6 +520,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("History Location Tests")
         class HistoryLocationTests {
+
             private static final String historyInputLocation = "--historyInputLocation";
             private static final String historyOutputLocation = "--historyOutputLocation";
             private final PitestOperation op = new PitestOperation().fromProject(new WebProject());
@@ -557,6 +563,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Include Test")
         class IncludeTest {
+
             @Test
             void includeLaunchClasspathIsFalse() {
                 var op = new PitestOperation()
@@ -601,6 +608,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("JVM Tests")
         class JvmTests {
+
             @Test
             void jvmArgs() {
                 var op = new PitestOperation()
@@ -639,6 +647,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Mutable Code Paths Tests")
         class MutableCodePathsTests {
+
             private static final String MUTABLE_CODE_PATHS = "--mutableCodePaths";
 
             @Test
@@ -681,6 +690,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Mutation Tests")
         class MutationTests {
+
             @Test
             void failWhenNoMutationsIsFalse() {
                 var op = new PitestOperation()
@@ -781,6 +791,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Output Tests")
         class OutputTests {
+
             private static final String OUTPUT_FORMATS = "--outputFormats";
 
             @Test
@@ -794,6 +805,7 @@ class PitestOperationTests {
             @Nested
             @DisplayName("Output Formats Tests")
             class OutputFormatsTests {
+
                 @Test
                 void outputFormats() {
                     var op = new PitestOperation().outputFormats(FOO, BAR);
@@ -835,6 +847,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Report Tests")
         class ReportTests {
+
             private static final String REPORT_DIR = "--reportDir";
 
             @Test
@@ -859,6 +872,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Source Directories Tests")
         class SourceDirectoriesTests {
+
             private static final String SOURCE_DIRS = "--sourceDirs";
 
             @Test
@@ -901,6 +915,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Target Tests")
         class TargetTests {
+
             @Test
             void targetClasses() {
                 var op = new PitestOperation()
@@ -937,6 +952,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Timeout Tests")
         class TimeoutTests {
+
             @Test
             void timeoutConst() {
                 var op = new PitestOperation()
@@ -957,6 +973,7 @@ class PitestOperationTests {
         @Nested
         @DisplayName("Verbose Tests")
         class VerboseTests {
+
             @Test
             void verboseIsFalse() {
                 var op = new PitestOperation()
