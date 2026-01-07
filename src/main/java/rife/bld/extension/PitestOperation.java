@@ -76,7 +76,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             args.add(javaTool());
             args.add("-cp");
             args.add(
-                    ClasspathUtils.buildClasspath(
+                    ClasspathUtils.joinClasspath(
                             ClasspathUtils.joinClasspath(
                                     project_.testClasspathJars(),
                                     project_.compileClasspathJars(),
