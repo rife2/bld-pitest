@@ -18,7 +18,7 @@ package rife.bld.extension;
 
 import rife.bld.BuildCommand;
 import rife.bld.Project;
-import rife.bld.extension.tools.IOUtils;
+import rife.bld.extension.tools.IOTools;
 import rife.bld.publish.PublishDeveloper;
 import rife.bld.publish.PublishLicense;
 import rife.bld.publish.PublishScm;
@@ -54,7 +54,8 @@ public class PitestOperationBuild extends Project {
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld-extensions-tools",
                         version(0, 9, 0, "SNAPSHOT")))
-                .include(dependency("com.uwyn.rife2", "bld", version(2, 3, 0)));
+                .include(dependency("com.uwyn.rife2", "bld",
+                        version(2, 3, 1, "SNAPSHOT")));
         scope(provided)
                 .include(dependency("com.github.spotbugs", "spotbugs-annotations",
                         version(4, 9, 8)));
@@ -110,7 +111,7 @@ public class PitestOperationBuild extends Project {
         }
 
         var op = testOperation().fromProject(this);
-        op.testToolOptions().reportsDir(IOUtils.resolveFile(buildDirectory(), "test-results", "test"));
+        op.testToolOptions().reportsDir(IOTools.resolveFile(buildDirectory(), "test-results", "test"));
         op.execute();
     }
 

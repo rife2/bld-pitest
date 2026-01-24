@@ -18,8 +18,9 @@ package rife.bld.extension;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
-import rife.bld.extension.tools.ClasspathUtils;
-import rife.bld.extension.tools.TextUtils;
+import rife.bld.extension.tools.ClasspathTools;
+import rife.bld.extension.tools.ObjectTools;
+import rife.bld.extension.tools.TextTools;
 import rife.bld.operations.AbstractProcessOperation;
 import rife.bld.operations.exceptions.ExitStatusException;
 
@@ -76,8 +77,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             args.add(javaTool());
             args.add("-cp");
             args.add(
-                    ClasspathUtils.joinClasspath(
-                            ClasspathUtils.joinClasspath(
+                    ClasspathTools.joinClasspath(
+                            ClasspathTools.joinClasspath(
                                     project_.testClasspathJars(),
                                     project_.compileClasspathJars(),
                                     project_.providedClasspathJars()
@@ -127,7 +128,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation argLine(String line) {
-        if (TextUtils.isNotBlank(line)) {
+        if (TextTools.isNotBlank(line)) {
             options_.put("--argLine", line);
         }
         return this;
@@ -153,7 +154,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #avoidCallsTo(String...)
      */
     public PitestOperation avoidCallsTo(Collection<String> avoidCallsTo) {
-        options_.put("--avoidCallsTo", String.join(",", avoidCallsTo.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(avoidCallsTo)) {
+            options_.put("--avoidCallsTo", String.join(",", avoidCallsTo.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -177,7 +180,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #avoidCallsTo(Collection)
      */
     public PitestOperation avoidCallsTo(String... avoidCallTo) {
-        return avoidCallsTo(List.of(avoidCallTo));
+        if (ObjectTools.isNotEmpty(avoidCallTo)) {
+            return avoidCallsTo(List.of(avoidCallTo));
+        }
+        return this;
     }
 
     /**
@@ -201,7 +207,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPath(Collection)
      */
     public PitestOperation classPath(String... path) {
-        return classPath(List.of(path));
+        if (ObjectTools.isNotEmpty(path)) {
+            return classPath(List.of(path));
+        }
+        return this;
     }
 
     /**
@@ -225,7 +234,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPathPaths(Collection)
      */
     public PitestOperation classPath(Path... path) {
-        return classPathPaths(List.of(path));
+        if (ObjectTools.isNotEmpty(path)) {
+            return classPathPaths(List.of(path));
+        }
+        return this;
     }
 
     /**
@@ -236,7 +248,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPath(String...)
      */
     public PitestOperation classPath(Collection<String> path) {
-        options_.put("--classPath", String.join(",", path.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(path)) {
+            options_.put("--classPath", String.join(",", path.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -261,7 +275,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPathFiles(Collection)
      */
     public PitestOperation classPath(File... path) {
-        return classPathFiles(List.of(path));
+        if (ObjectTools.isNotEmpty(path)) {
+            return classPathFiles(List.of(path));
+        }
+        return this;
     }
 
     /**
@@ -271,7 +288,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation classPathFile(String file) {
-        if (TextUtils.isNotBlank(file)) {
+        if (TextTools.isNotBlank(file)) {
             options_.put("--classPathFile", file);
         }
         return this;
@@ -285,7 +302,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPath(File...)
      */
     public PitestOperation classPathFiles(Collection<File> path) {
-        return classPath(path.stream().map(File::getAbsolutePath).toList());
+        if (ObjectTools.isNotEmpty(path)) {
+            return classPath(path.stream().map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -296,7 +316,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPath(Path...)
      */
     public PitestOperation classPathPaths(Collection<Path> path) {
-        return classPath(path.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+        if (ObjectTools.isNotEmpty(path)) {
+            return classPath(path.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -379,7 +402,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedClasses(Collection)
      */
     public PitestOperation excludedClasses(String... excludedClass) {
-        return excludedClasses(List.of(excludedClass));
+        if (ObjectTools.isNotEmpty(excludedClass)) {
+            return excludedClasses(List.of(excludedClass));
+        }
+        return this;
     }
 
     /**
@@ -390,8 +416,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedClasses(String...)
      */
     public PitestOperation excludedClasses(Collection<String> excludedClasses) {
-        options_.put("--excludedClasses",
-                String.join(",", excludedClasses.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(excludedClasses)) {
+            options_.put("--excludedClasses",
+                    String.join(",", excludedClasses.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -404,7 +432,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedGroups(Collection)
      */
     public PitestOperation excludedGroups(String... excludedGroup) {
-        return excludedGroups(List.of(excludedGroup));
+        if (ObjectTools.isNotEmpty(excludedGroup)) {
+            return excludedGroups(List.of(excludedGroup));
+        }
+        return this;
     }
 
     /**
@@ -416,8 +447,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedGroups(String...)
      */
     public PitestOperation excludedGroups(Collection<String> excludedGroups) {
-        options_.put("--excludedGroups", String.join(",",
-                excludedGroups.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(excludedGroups)) {
+            options_.put("--excludedGroups", String.join(",",
+                    excludedGroups.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -429,7 +462,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedMethods(Collection)
      */
     public PitestOperation excludedMethods(String... excludedMethod) {
-        return excludedMethods(List.of(excludedMethod));
+        if (ObjectTools.isNotEmpty(excludedMethod)) {
+            return excludedMethods(List.of(excludedMethod));
+        }
+        return this;
     }
 
     /**
@@ -440,8 +476,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedMethods(String...)
      */
     public PitestOperation excludedMethods(Collection<String> excludedMethods) {
-        options_.put("--excludedMethods",
-                String.join(",", excludedMethods.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(excludedMethods)) {
+            options_.put("--excludedMethods",
+                    String.join(",", excludedMethods.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -465,7 +503,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedTestClasses(Collection)
      */
     public PitestOperation excludedTestClasses(String... testClasses) {
-        return excludedTestClasses(List.of(testClasses));
+        if (ObjectTools.isNotEmpty(testClasses)) {
+            return excludedTestClasses(List.of(testClasses));
+        }
+        return this;
     }
 
     /**
@@ -477,8 +518,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #excludedTestClasses(String...)
      */
     public PitestOperation excludedTestClasses(Collection<String> testClasses) {
-        options_.put("--excludedTestClasses",
-                String.join(",", testClasses.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(testClasses)) {
+            options_.put("--excludedTestClasses",
+                    String.join(",", testClasses.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -524,7 +567,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #features(String...)
      */
     public PitestOperation features(Collection<String> feature) {
-        options_.put("--features", String.join(",", feature.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(feature)) {
+            options_.put("--features", String.join(",", feature.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -536,7 +581,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #features(Collection)
      */
     public PitestOperation features(String... feature) {
-        return features(List.of(feature));
+        if (ObjectTools.isNotEmpty(feature)) {
+            return features(List.of(feature));
+        }
+        return this;
     }
 
     /**
@@ -561,7 +609,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation historyInputLocation(String path) {
-        if (TextUtils.isNotBlank(path)) {
+        if (TextTools.isNotBlank(path)) {
             options_.put("--historyInputLocation", path);
         }
         return this;
@@ -595,7 +643,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation historyOutputLocation(String path) {
-        if (TextUtils.isNotBlank(path)) {
+        if (TextTools.isNotBlank(path)) {
             options_.put("--historyOutputLocation", path);
         }
         return this;
@@ -651,7 +699,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #includedGroups(Collection)
      */
     public PitestOperation includedGroups(String... includedGroup) {
-        return includedGroups(List.of(includedGroup));
+        if (ObjectTools.isNotEmpty(includedGroup)) {
+            return includedGroups(List.of(includedGroup));
+        }
+        return this;
     }
 
     /**
@@ -663,8 +714,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #includedGroups(String...)
      */
     public PitestOperation includedGroups(Collection<String> includedGroups) {
-        options_.put("--includedGroups",
-                String.join(",", includedGroups.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(includedGroups)) {
+            options_.put("--includedGroups",
+                    String.join(",", includedGroups.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -688,7 +741,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation inputEncoding(String encoding) {
-        if (TextUtils.isNotBlank(encoding)) {
+        if (TextTools.isNotBlank(encoding)) {
             options_.put("--inputEncoding", encoding);
         }
         return this;
@@ -703,7 +756,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmArgs(Collection)
      */
     public PitestOperation jvmArgs(String... args) {
-        return jvmArgs(List.of(args));
+        if (ObjectTools.isNotEmpty(args)) {
+            return jvmArgs(List.of(args));
+        }
+        return this;
     }
 
     /**
@@ -715,8 +771,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmArgs(String...)
      */
     public PitestOperation jvmArgs(Collection<String> args) {
-        options_.put("--jvmArgs", String.join(",",
-                args.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(args)) {
+            options_.put("--jvmArgs", String.join(",",
+                    args.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -728,7 +786,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation jvmPath(String path) {
-        if (TextUtils.isNotBlank(path)) {
+        if (TextTools.isNotBlank(path)) {
             options_.put("--jvmPath", path);
         }
         return this;
@@ -793,7 +851,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePaths(Collection)
      */
     public PitestOperation mutableCodePaths(String... path) {
-        return mutableCodePaths(List.of(path));
+        if (ObjectTools.isNotEmpty(path)) {
+            return mutableCodePaths(List.of(path));
+        }
+        return this;
     }
 
     /**
@@ -811,7 +872,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePathsPaths(Collection)
      */
     public PitestOperation mutableCodePaths(Path... path) {
-        return mutableCodePathsPaths(List.of(path));
+        if (ObjectTools.isNotEmpty(path)) {
+            return mutableCodePathsPaths(List.of(path));
+        }
+        return this;
     }
 
     /**
@@ -829,7 +893,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePathsFiles(Collection)
      */
     public PitestOperation mutableCodePaths(File... path) {
-        return mutableCodePathsFiles(List.of(path));
+        if (ObjectTools.isNotEmpty(path)) {
+            return mutableCodePathsFiles(List.of(path));
+        }
+        return this;
     }
 
     /**
@@ -847,8 +914,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePaths(String...)
      */
     public PitestOperation mutableCodePaths(Collection<String> paths) {
-        options_.put("--mutableCodePaths",
-                String.join(",", paths.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(paths)) {
+            options_.put("--mutableCodePaths",
+                    String.join(",", paths.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -867,7 +936,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePaths(File...)
      */
     public PitestOperation mutableCodePathsFiles(Collection<File> paths) {
-        return mutableCodePaths(paths.stream().map(File::getAbsolutePath).toList());
+        if (ObjectTools.isNotEmpty(paths)) {
+            return mutableCodePaths(paths.stream().map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -885,7 +957,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutableCodePaths(Path...)
      */
     public PitestOperation mutableCodePathsPaths(Collection<Path> paths) {
-        return mutableCodePaths(paths.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+        if (ObjectTools.isNotEmpty(paths)) {
+            return mutableCodePaths(paths.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -937,7 +1012,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutators(Collection)
      */
     public PitestOperation mutators(String... mutator) {
-        options_.put("--mutators", String.join(",", Arrays.stream(mutator).filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(mutator)) {
+            options_.put("--mutators", String.join(",", Arrays.stream(mutator).filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -949,7 +1026,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #mutators(String...)
      */
     public PitestOperation mutators(Collection<String> mutators) {
-        options_.put("--mutators", String.join(",", mutators.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(mutators)) {
+            options_.put("--mutators", String.join(",", mutators.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -972,7 +1051,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation outputEncoding(String encoding) {
-        if (TextUtils.isNotBlank(encoding)) {
+        if (TextTools.isNotBlank(encoding)) {
             options_.put("--outputEncoding", encoding);
         }
         return this;
@@ -989,7 +1068,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormatsFiles(Collection)
      */
     public PitestOperation outputFormats(File... outputFormat) {
-        return outputFormatsFiles(List.of(outputFormat));
+        if (ObjectTools.isNotEmpty(outputFormat)) {
+            return outputFormatsFiles(List.of(outputFormat));
+        }
+        return this;
     }
 
     /**
@@ -1003,7 +1085,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormatsPaths(Collection)
      */
     public PitestOperation outputFormats(Path... outputFormat) {
-        return outputFormatsPaths(List.of(outputFormat));
+        if (ObjectTools.isNotEmpty(outputFormat)) {
+            return outputFormatsPaths(List.of(outputFormat));
+        }
+        return this;
     }
 
     /**
@@ -1017,7 +1102,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormats(Collection)
      */
     public PitestOperation outputFormats(String... outputFormat) {
-        return outputFormats(List.of(outputFormat));
+        if (ObjectTools.isNotEmpty(outputFormat)) {
+            return outputFormats(List.of(outputFormat));
+        }
+        return this;
     }
 
     /**
@@ -1031,8 +1119,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormats(String...)
      */
     public PitestOperation outputFormats(Collection<String> outputFormats) {
-        options_.put("--outputFormats",
-                String.join(",", outputFormats.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(outputFormats)) {
+            options_.put("--outputFormats",
+                    String.join(",", outputFormats.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -1047,7 +1137,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormats(File...)
      */
     public PitestOperation outputFormatsFiles(Collection<File> outputFormats) {
-        return outputFormats(outputFormats.stream().map(File::getAbsolutePath).toList());
+        if (ObjectTools.isNotEmpty(outputFormats)) {
+            return outputFormats(outputFormats.stream().map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -1061,8 +1154,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #outputFormats(Path...)
      */
     public PitestOperation outputFormatsPaths(Collection<Path> outputFormats) {
-        return outputFormats(outputFormats.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
-
+        if (ObjectTools.isNotEmpty(outputFormats)) {
+            return outputFormats(outputFormats.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -1115,7 +1210,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation reportDir(String dir) {
-        if (TextUtils.isNotBlank(dir)) {
+        if (TextTools.isNotBlank(dir)) {
             options_.put("--reportDir", dir);
         }
         return this;
@@ -1166,7 +1261,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirs(Collection)
      */
     public PitestOperation sourceDirs(String... dir) {
-        return sourceDirs(List.of(dir));
+        if (ObjectTools.isNotEmpty(dir)) {
+            return sourceDirs(List.of(dir));
+        }
+        return this;
     }
 
     /**
@@ -1177,7 +1275,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirsFiles(Collection)
      */
     public PitestOperation sourceDirs(File... dir) {
-        return sourceDirsFiles(List.of(dir));
+        if (ObjectTools.isNotEmpty(dir)) {
+            return sourceDirsFiles(List.of(dir));
+        }
+        return this;
     }
 
     /**
@@ -1188,7 +1289,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirsPaths(Collection)
      */
     public PitestOperation sourceDirs(Path... dir) {
-        return sourceDirsPaths(List.of(dir));
+        if (ObjectTools.isNotEmpty(dir)) {
+            return sourceDirsPaths(List.of(dir));
+        }
+        return this;
     }
 
     /**
@@ -1199,7 +1303,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirs(String...)
      */
     public PitestOperation sourceDirs(Collection<String> dirs) {
-        options_.put(SOURCE_DIRS, String.join(",", dirs.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(dirs)) {
+            options_.put(SOURCE_DIRS, String.join(",", dirs.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -1211,7 +1317,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirs(File...)
      */
     public PitestOperation sourceDirsFiles(Collection<File> dirs) {
-        return sourceDirs(dirs.stream().map(File::getAbsolutePath).toList());
+        if (ObjectTools.isNotEmpty(dirs)) {
+            return sourceDirs(dirs.stream().map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -1222,8 +1331,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #sourceDirs(Path...)
      */
     public PitestOperation sourceDirsPaths(Collection<Path> dirs) {
-        return sourceDirs(dirs.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
-
+        if (ObjectTools.isNotEmpty(dirs)) {
+            return sourceDirs(dirs.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
+        }
+        return this;
     }
 
     /**
@@ -1240,8 +1351,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetClasses(Collection)
      */
     public PitestOperation targetClasses(Collection<String> targetClass) {
-        options_.put("--targetClasses",
-                String.join(",", targetClass.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(targetClass)) {
+            options_.put("--targetClasses",
+                    String.join(",", targetClass.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
@@ -1259,7 +1372,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetClasses(String...)
      */
     public PitestOperation targetClasses(String... targetClass) {
-        return targetClasses(List.of(targetClass));
+        if (ObjectTools.isNotEmpty(targetClass)) {
+            return targetClasses(List.of(targetClass));
+        }
+        return this;
     }
 
     /**
@@ -1275,7 +1391,10 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetTests(Collection)
      */
     public PitestOperation targetTests(String... test) {
-        return targetTests(List.of(test));
+        if (ObjectTools.isNotEmpty(test)) {
+            return targetTests(List.of(test));
+        }
+        return this;
     }
 
     /**
@@ -1291,7 +1410,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #targetTests(String...)
      */
     public PitestOperation targetTests(Collection<String> tests) {
-        options_.put("--targetTests", String.join(",", tests.stream().filter(TextUtils::isNotBlank).toList()));
+        if (ObjectTools.isNotEmpty(tests)) {
+            options_.put("--targetTests", String.join(",", tests.stream().filter(TextTools::isNotBlank).toList()));
+        }
         return this;
     }
 
