@@ -49,7 +49,7 @@ public class PitestOperationBuild extends Project {
 
         repositories = List.of(MAVEN_LOCAL, MAVEN_CENTRAL, RIFE2_SNAPSHOTS, RIFE2_RELEASES);
 
-        var pitest = version(1, 22, 0);
+        var pitest = version(1, 22, 1);
         var junit = version(6, 0, 2);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld-extensions-tools",
@@ -65,7 +65,7 @@ public class PitestOperationBuild extends Project {
                 .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 3)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", junit))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", junit))
-                .include(dependency("org.assertj", "assertj-core", version(3, 27, 6)));
+                .include(dependency("org.assertj", "assertj-core", version(3, 27, 7)));
 
         javadocOperation()
                 .javadocOptions()
