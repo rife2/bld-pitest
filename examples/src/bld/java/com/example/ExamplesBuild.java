@@ -13,8 +13,7 @@ import java.util.logging.Logger;
 
 import static rife.bld.dependencies.Scope.test;
 
-import static rife.bld.dependencies.Repository.MAVEN_CENTRAL;
-import static rife.bld.dependencies.Repository.RIFE2_RELEASES;
+import static rife.bld.dependencies.Repository.*;
 
 public class ExamplesBuild extends Project {
     public ExamplesBuild() {
@@ -27,9 +26,9 @@ public class ExamplesBuild extends Project {
         downloadSources = true;
         autoDownloadPurge = true;
 
-        repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
+        repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
-        var pitest = version(1, 22, 1);
+        var pitest = version(1, 23, 0);
         var junit = version(6, 0, 3);
         scope(test)
                 .include(dependency("org.pitest", "pitest", pitest))

@@ -47,9 +47,9 @@ public class PitestOperationBuild extends Project {
         downloadSources = true;
         autoDownloadPurge = true;
 
-        repositories = List.of(MAVEN_CENTRAL, CENTRAL_SNAPSHOTS, RIFE2_RELEASES);
+        repositories = List.of(MAVEN_CENTRAL, CENTRAL_SNAPSHOTS, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
-        var pitest = version(1, 22, 1);
+        var pitest = version(1, 23, 0);
         var junit = version(6, 0, 3);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld-extensions-tools",

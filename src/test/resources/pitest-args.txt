@@ -2,6 +2,7 @@
 --avoidCallsTo
 --classPath
 --classPathFile
+--configDir
 --coverageThreshold
 --detectInlinedCode
 --dryRun
