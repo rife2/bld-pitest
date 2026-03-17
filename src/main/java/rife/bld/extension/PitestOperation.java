@@ -323,6 +323,37 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
+     * Directory to examine for configuration.
+     *
+     * @param dir the directory
+     * @return this operation instance
+     */
+    public PitestOperation configDir(File dir) {
+        return configDir(dir.getAbsolutePath());
+    }
+
+    /**
+     * Directory to examine for configuration.
+     *
+     * @param dir the directory path
+     * @return this operation instance
+     */
+    public PitestOperation configDir(Path dir) {
+        return configDir(dir.toFile());
+    }
+
+    /**
+     * Directory to examine for configuration.
+     *
+     * @param dir the directory
+     * @return this operation instance
+     */
+    public PitestOperation configDir(String dir) {
+        options_.put("--configDir", dir);
+        return this;
+    }
+
+    /**
      * Line coverage threshold below which the build will fail. This is an integer percent (0-100) that represents the
      * fraction of the project covered by the tests.
      *

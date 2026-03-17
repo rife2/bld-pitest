@@ -171,6 +171,7 @@ class PitestOperationTests {
                     .avoidCallsTo(FOO, BAR)
                     .classPath(FOO, BAR)
                     .classPathFile(FOO)
+                    .configDir(FOO)
                     .coverageThreshold(0)
                     .detectInlinedCode(false)
                     .dryRun(false)
@@ -231,6 +232,30 @@ class PitestOperationTests {
                     softly.assertThat(found).as("%s not found", p).isTrue();
                 }
             }
+        }
+
+        @Test
+        void configDir() {
+            var op = new PitestOperation()
+                    .fromProject(new BaseProject())
+                    .configDir(FOO);
+            assertThat(op.options().get("--configDir")).isEqualTo(FOO);
+        }
+
+        @Test
+        void configDirAsFile() {
+            var op = new PitestOperation()
+                    .fromProject(new BaseProject())
+                    .configDir(FOO_FILE);
+            assertThat(op.options().get("--configDir")).isEqualTo(FOO_FILE.getAbsolutePath());
+        }
+
+        @Test
+        void configDirAsPath() {
+            var op = new PitestOperation()
+                    .fromProject(new BaseProject())
+                    .configDir(FOO_FILE.toPath());
+            assertThat(op.options().get("--configDir")).isEqualTo(FOO_FILE.getAbsolutePath());
         }
 
         @Test
