@@ -53,7 +53,7 @@ public class PitestOperationBuild extends Project {
         var junit = version(6, 0, 3);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld-extensions-tools",
-                        version(0, 9, 0)))
+                        version(0, 9, 1, "SNAPSHOT")))
                 .include(dependency("com.uwyn.rife2", "bld",
                         version(2, 3, 1, "SNAPSHOT")));
         scope(provided)
