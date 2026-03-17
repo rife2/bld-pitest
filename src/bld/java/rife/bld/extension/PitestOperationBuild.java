@@ -40,7 +40,7 @@ public class PitestOperationBuild extends Project {
         pkg = "rife.bld.extension";
         name = "PIT Mutation Testing";
         archiveBaseName = "bld-pitest";
-        version = version(1, 0, 12, "SNAPSHOT");
+        version = version(1, 0, 12);
 
         javaRelease = 17;
 
