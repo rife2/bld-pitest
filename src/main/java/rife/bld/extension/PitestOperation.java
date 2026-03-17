@@ -327,6 +327,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param dir the directory
      * @return this operation instance
+     * @see #configDir(String)
+     * @see #configDir(Path)
      */
     public PitestOperation configDir(File dir) {
         return configDir(dir.getAbsolutePath());
@@ -337,6 +339,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param dir the directory path
      * @return this operation instance
+     * @see #configDir(File)
+     * @see #configDir(String)
      */
     public PitestOperation configDir(Path dir) {
         return configDir(dir.toFile());
@@ -347,6 +351,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param dir the directory
      * @return this operation instance
+     * @see #configDir(Path)
+     * @see #configDir(File)
      */
     public PitestOperation configDir(String dir) {
         options_.put("--configDir", dir);
