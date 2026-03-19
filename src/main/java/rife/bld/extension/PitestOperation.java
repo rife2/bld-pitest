@@ -1557,13 +1557,24 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     /**
      * The verbosity of output.
      * <p>
-     * Defaults to {@code DEFAULT}
+     * Defaults to {@code Verbosity.DEFAULT}
      *
      * @param verbosity the verbosity
      * @return this operation instance
      */
-    public PitestOperation verbosity(String verbosity) {
-        options_.put("--verbosity", verbosity);
+    public PitestOperation verbosity(Verbosity verbosity) {
+        options_.put("--verbosity", verbosity.name());
         return this;
     }
 }
+    /**
+     * Verbosity of output.
+     */
+    public enum Verbosity {
+        DEFAULT,
+        NO_SPINNER,
+        QUIET,
+        QUIET_WITH_PROGRESS,
+        VERBOSE,
+        VERBOSE_NO_SPINNER
+    }
