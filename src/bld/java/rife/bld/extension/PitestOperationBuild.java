@@ -40,32 +40,36 @@ public class PitestOperationBuild extends Project {
         pkg = "rife.bld.extension";
         name = "PIT Mutation Testing";
         archiveBaseName = "bld-pitest";
-        version = version(1, 0, 12);
+        version = version(1, 1, 0, "SNAPSHOT");
 
         javaRelease = 17;
 
         downloadSources = true;
         autoDownloadPurge = true;
 
-        repositories = List.of(MAVEN_CENTRAL, CENTRAL_SNAPSHOTS, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
+        repositories = List.of(MAVEN_CENTRAL, CENTRAL_SNAPSHOTS, RIFE2_RELEASES, MAVEN_LOCAL);
 
         var pitest = version(1, 23, 0);
         var junit = version(6, 0, 3);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld-extensions-tools",
-                        version(0, 9, 1, "SNAPSHOT")))
+                        version(1, 2, 0)))
                 .include(dependency("com.uwyn.rife2", "bld",
                         version(2, 3, 1, "SNAPSHOT")));
         scope(provided)
                 .include(dependency("com.github.spotbugs", "spotbugs-annotations",
                         version(4, 9, 8)));
         scope(test)
+                .include(dependency("com.uwyn.rife2", "bld-extensions-testing-helpers",
+                        version(1, 0, 0)))
                 .include(dependency("org.pitest", "pitest", pitest))
                 .include(dependency("org.pitest", "pitest-command-line", pitest))
-                .include(dependency("org.pitest", "pitest-junit5-plugin", version(1, 2, 3)))
+                .include(dependency("org.pitest", "pitest-junit5-plugin",
+                        version(1, 2, 3)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", junit))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", junit))
-                .include(dependency("org.assertj", "assertj-core", version(3, 27, 7)));
+                .include(dependency("org.assertj", "assertj-core",
+                        version(3, 27, 7)));
 
         javadocOperation()
                 .javadocOptions()

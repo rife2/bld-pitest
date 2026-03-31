@@ -22,10 +22,16 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import rife.bld.BaseProject;
 import rife.bld.Project;
 import rife.bld.WebProject;
+import rife.bld.extension.testing.LoggingExtension;
+import rife.bld.extension.testing.TestLogHandler;
 import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.File;
@@ -34,25 +40,36 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static rife.bld.extension.PitestOperation.FALSE;
-import static rife.bld.extension.PitestOperation.TRUE;
+import static org.assertj.core.api.Assertions.*;
 
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class PitestOperationTests {
 
     private static final String BAR = "bar";
     private static final File BAR_FILE = new File(BAR);
+    private static final String FALSE = Boolean.FALSE.toString();
     private static final String FOO = "foo";
     private static final String FOOBAR = FOO + ',' + BAR;
     private static final File FOO_FILE = new File(FOO);
     private static final String FOOBAR_FORMAT =
             String.format("%s,%s", FOO_FILE.getAbsolutePath(), BAR_FILE.getAbsolutePath());
+    private static final TestLogHandler TEST_LOG_HANDLER = new TestLogHandler();
+
+    @RegisterExtension
+    @SuppressWarnings({"LoggerInitializedWithForeignClass", "unused"})
+    private static final LoggingExtension LOGGING_EXTENSION = new LoggingExtension(
+            Logger.getLogger(PitestOperation.class.getName()),
+            TEST_LOG_HANDLER
+    );
+    private static final String TRUE = Boolean.TRUE.toString();
 
     @Nested
     @DisplayName("Execute Tests")
+    @ExtendWith(LoggingExtension.class)
     class ExecuteTests {
 
         @TempDir
@@ -65,7 +82,7 @@ class PitestOperationTests {
                     .reportDir(tmpDir)
                     .targetClasses("com.example.*")
                     .targetTests("com.example.*")
-                    .verbose(true)
+                    .verbose(false)
                     .failWhenNoMutations(false)
                     .sourceDirs("examples/src");
 
@@ -82,12 +99,12 @@ class PitestOperationTests {
                     .targetTests("com.your.package.*")
                     .sourceDirs("parthsource");
 
-            assertThat(String.join(" ", op.executeConstructProcessCommandList())).endsWith(
-                    " org.pitest.mutationtest.commandline.MutationCoverageReport " +
-                            "--targetTests com.your.package.* " +
-                            "--reportDir outputdir " +
-                            "--targetClasses com.your.package.tobemutated* " +
-                            "--sourceDirs parthsource");
+            assertThat(String.join(" ", op.executeConstructProcessCommandList())).contains(
+                    "org.pitest.mutationtest.commandline.MutationCoverageReport",
+                    "--reportDir outputdir",
+                    "--targetClasses com.your.package.tobemutated*",
+                    "--targetTests com.your.package.*",
+                    "--sourceDirs parthsource");
 
             op = new PitestOperation()
                     .fromProject(new BaseProject())
@@ -97,20 +114,21 @@ class PitestOperationTests {
                     .targetTests("example.foo*")
                     .threads(2)
                     .excludedMethods("hashcode", "equals");
-            assertThat(String.join(" ", op.executeConstructProcessCommandList())).endsWith(
-                    "org.pitest.mutationtest.commandline.MutationCoverageReport " +
-                            "--targetTests example.foo* " +
-                            "--threads 2 " +
-                            "--excludedMethods hashcode,equals " +
-                            "--reportDir c:\\mutationReports " +
-                            "--targetClasses example.foo.* " +
-                            "--sourceDirs c:\\myProject\\src");
+
+            assertThat(String.join(" ", op.executeConstructProcessCommandList())).contains(
+                    "org.pitest.mutationtest.commandline.MutationCoverageReport",
+                    "--targetTests example.foo*",
+                    "--threads 2",
+                    "--excludedMethods hashcode,equals",
+                    "--reportDir c:\\mutationReports",
+                    "--targetClasses example.foo.*",
+                    "--sourceDirs c:\\myProject\\src");
         }
 
         @Test
         void executeNoProject() {
             var op = new PitestOperation();
-            assertThatCode(op::execute).isInstanceOf(ExitStatusException.class);
+            assertThatCode(op::execute).isInstanceOf(NullPointerException.class);
         }
 
         @Test
@@ -140,22 +158,6 @@ class PitestOperationTests {
                     .fromProject(new BaseProject())
                     .argLine(FOO);
             assertThat(op.options().get("--argLine")).isEqualTo(FOO);
-        }
-
-        @Test
-        void avoidCallsTo() {
-            var op = new PitestOperation()
-                    .fromProject(new BaseProject())
-                    .avoidCallsTo(FOO, BAR);
-            assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
-        }
-
-        @Test
-        void avoidCallsToAsList() {
-            var op = new PitestOperation()
-                    .fromProject(new Project())
-                    .avoidCallsTo(List.of(FOO, BAR));
-            assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
         }
 
         @Test
@@ -203,8 +205,8 @@ class PitestOperationTests {
                     .mutationUnitSize(1)
                     .mutators(List.of(FOO, BAR))
                     .outputEncoding("encoding")
-                    .outputFormats("json")
-                    .pluginConfiguration("key", "value")
+                    .outputFormats(PitestOperation.OutputFormat.CSV)
+                    .pluginConfiguration(Map.of("key", "value"))
                     .projectBase("base")
                     .reportDir("dir")
                     .skipFailingTests(true)
@@ -217,7 +219,7 @@ class PitestOperationTests {
                     .timestampedReports(true)
                     .useClasspathJar(true)
                     .verbose(true)
-                    .verbosity("default")
+                    .verbosity(PitestOperation.Verbosity.DEFAULT)
                     .executeConstructProcessCommandList();
 
             try (var softly = new AutoCloseableSoftAssertions()) {
@@ -272,6 +274,8 @@ class PitestOperationTests {
                     .fromProject(new BaseProject())
                     .coverageThreshold(101);
             assertThat(op.options().get("--coverageThreshold")).isNull();
+            assertThat(TEST_LOG_HANDLER.containsMessage("0 and 100")).isTrue();
+            TEST_LOG_HANDLER.clear();
         }
 
         @Test
@@ -299,21 +303,14 @@ class PitestOperationTests {
         }
 
         @Test
-        void features() {
-            var op = new PitestOperation()
-                    .fromProject(new BaseProject())
-                    .features(FOO, BAR);
-            assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
+        void excludedTestClassesHasBlanks() {
+            assertThatThrownBy(() ->
+                    new PitestOperation()
+                            .fromProject(new BaseProject())
+                            .excludedTestClasses(FOO, "", BAR))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("non-null and non-empty");
         }
-
-        @Test
-        void featuresAsList() {
-            var op = new PitestOperation()
-                    .fromProject(new Project())
-                    .features(List.of(FOO, BAR));
-            assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
-        }
-
 
         @Test
         void inputEncoding() {
@@ -335,9 +332,20 @@ class PitestOperationTests {
         void pluginConfiguration() {
             var op = new PitestOperation()
                     .fromProject(new Project())
-                    .pluginConfiguration(FOO, BAR);
+                    .pluginConfiguration(Map.of(FOO, BAR));
             assertThat(op.options().get("--pluginConfiguration")).isEqualTo(FOO + "=" + BAR);
         }
+
+        @Test
+        void pluginConfigurationWithBlank() {
+            assertThatThrownBy(() ->
+                    new PitestOperation()
+                            .fromProject(new Project())
+                            .pluginConfiguration(Map.of(FOO, "")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("non-null and non-empty");
+        }
+
 
         @Test
         void projectBase() {
@@ -406,6 +414,37 @@ class PitestOperationTests {
         }
 
         @Nested
+        @DisplayName("Avoid Calls To Tests")
+        class AvoidCallsToTests {
+
+            @Test
+            void avoidCallsTo() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .avoidCallsTo(FOO, BAR);
+                assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void avoidCallsToAsList() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .avoidCallsTo(List.of(FOO, BAR));
+                assertThat(op.options().get("--avoidCallsTo")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void avoidCallsToHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .avoidCallsTo(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+        }
+
+        @Nested
         @DisplayName("ClassPath Tests")
         class ClassPathTests {
 
@@ -415,14 +454,6 @@ class PitestOperationTests {
             void classPath() {
                 var op = new PitestOperation().classPath(FOO_FILE.toPath(), BAR_FILE.toPath());
                 assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
-            }
-
-            @Test
-            void classPathAsFile() {
-                var op = new PitestOperation()
-                        .fromProject(new BaseProject())
-                        .classPathFile(FOO);
-                assertThat(op.options().get("--classPathFile")).isEqualTo(FOO);
             }
 
             @Test
@@ -449,6 +480,57 @@ class PitestOperationTests {
             void classPathAsStringList() {
                 var op = new PitestOperation().classPathPaths(List.of(FOO_FILE.toPath(), BAR_FILE.toPath()));
                 assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
+            }
+
+            @Test
+            void classPathFile() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .classPathFile(FOO);
+                assertThat(op.options().get("--classPathFile")).isEqualTo(FOO);
+            }
+
+            @Test
+            void classPathFileAsFile() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .classPathFile(FOO_FILE);
+                assertThat(op.options().get("--classPathFile")).isEqualTo(FOO_FILE.getAbsolutePath());
+            }
+
+            @Test
+            void classPathFileAsPath() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .classPathFile(FOO_FILE.toPath());
+                assertThat(op.options().get("--classPathFile")).isEqualTo(FOO_FILE.getAbsolutePath());
+            }
+
+            @Test
+            void classPathFileWithBlank() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .classPathFile(""))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("null or empty");
+            }
+
+            @Test
+            void classPathHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .classPath(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
+            void classPathWithNull() {
+                assertThatThrownBy(() -> new PitestOperation().classPath(FOO_FILE, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null");
             }
 
             @Test
@@ -489,6 +571,16 @@ class PitestOperationTests {
             }
 
             @Test
+            void excludedClassesWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedClasses(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
             void excludedGroups() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
@@ -505,6 +597,26 @@ class PitestOperationTests {
             }
 
             @Test
+            void excludedGroupsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedGroups(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
+            void excludedGroupsWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedGroups(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
             void excludedMethods() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
@@ -518,11 +630,50 @@ class PitestOperationTests {
             }
 
             @Test
+            void excludedMethodsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedMethods(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
+            void excludedMethodsWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedMethods(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+
+            @Test
             void excludedRunners() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
                         .excludedRunners(FOO);
                 assertThat(op.options().get("--excludedRunners")).isEqualTo(FOO);
+            }
+
+            @Test
+            void excludedRunnersAsList() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .excludedRunners(List.of(FOO, BAR));
+                assertThat(op.options().get("--excludedRunners")).isEqualTo(FOO + ',' + BAR);
+            }
+
+            @Test
+            void excludedRunnersWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedRunners(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
             }
 
             @Test
@@ -539,6 +690,47 @@ class PitestOperationTests {
                         .fromProject(new Project())
                         .excludedTestClasses(List.of(FOO, BAR));
                 assertThat(op.options().get("--excludedTestClasses")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void excludedTestsWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .excludedTestClasses(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+        }
+
+        @Nested
+        @DisplayName("Features Tests")
+        class FeaturesTests {
+
+            @Test
+            void features() {
+                var op = new PitestOperation()
+                        .fromProject(new BaseProject())
+                        .features(FOO, BAR);
+                assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void featuresAsList() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .features(List.of(FOO, BAR));
+                assertThat(op.options().get("--features")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void featuresHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .features(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
             }
         }
 
@@ -622,17 +814,56 @@ class PitestOperationTests {
             }
 
             @Test
+            void includedGroupsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .includedGroups(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
+            void includedGroupsWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .includedGroups(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
             void includedTestMethods() {
                 var op = new PitestOperation()
                         .fromProject(new Project())
-                        .includedTestMethods(FOO);
-                assertThat(op.options().get("--includedTestMethods")).isEqualTo(FOO);
+                        .includedTestMethods(FOO, BAR);
+                assertThat(op.options().get("--includedTestMethods")).isEqualTo(FOO + ',' + BAR);
+            }
+
+            @Test
+            void includedTestMethodsAsList() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .includedTestMethods(List.of(FOO, BAR));
+                assertThat(op.options().get("--includedTestMethods")).isEqualTo(FOO + ',' + BAR);
+            }
+
+            @Test
+            void includedTestMethodsWithNull() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .includedTestMethods(FOO, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
             }
         }
 
         @Nested
         @DisplayName("JVM Tests")
         class JvmTests {
+
 
             @Test
             void jvmArgs() {
@@ -648,6 +879,16 @@ class PitestOperationTests {
                         .fromProject(new Project())
                         .jvmArgs(List.of(FOO, BAR));
                 assertThat(op.options().get("--jvmArgs")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void jvmArgsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .jvmArgs(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
             }
 
             @Test
@@ -709,6 +950,16 @@ class PitestOperationTests {
             void mutableCodePathsAsStringList() {
                 var op = new PitestOperation().mutableCodePaths(List.of(FOO, BAR));
                 assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void mutableCodePathsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .mutableCodePaths(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
             }
         }
 
@@ -811,6 +1062,16 @@ class PitestOperationTests {
                         .mutators(List.of(FOO, BAR));
                 assertThat(op.options().get("--mutators")).isEqualTo(FOOBAR);
             }
+
+            @Test
+            void mutatorsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .mutators(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
         }
 
         @Nested
@@ -831,40 +1092,23 @@ class PitestOperationTests {
             @DisplayName("Output Formats Tests")
             class OutputFormatsTests {
 
-                @Test
-                void outputFormats() {
-                    var op = new PitestOperation().outputFormats(FOO, BAR);
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOO + ',' + BAR);
+                @ParameterizedTest
+                @EnumSource(PitestOperation.OutputFormat.class)
+                void outputFormats(PitestOperation.OutputFormat format) {
+                    var op =
+                            new PitestOperation().outputFormats(PitestOperation.OutputFormat.HTML, format);
+                    var expected = new StringBuilder("HTML");
+                    if (!format.equals(PitestOperation.OutputFormat.HTML)) {
+                        expected.append(',').append(format.name());
+                    }
+                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(expected.toString());
                 }
 
-                @Test
-                void outputFormatsAsFileArray() {
-                    var op = new PitestOperation().outputFormats(FOO_FILE, BAR_FILE);
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-                }
-
-                @Test
-                void outputFormatsAsFileList() {
-                    var op = new PitestOperation().outputFormatsFiles(List.of(FOO_FILE, BAR_FILE));
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-                }
-
-                @Test
-                void outputFormatsAsPathArray() {
-                    var op = new PitestOperation().outputFormats(FOO_FILE.toPath(), BAR_FILE.toPath());
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-                }
-
-                @Test
-                void outputFormatsAsPathList() {
-                    var op = new PitestOperation().outputFormatsPaths(List.of(FOO_FILE.toPath(), BAR_FILE.toPath()));
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOOBAR_FORMAT);
-                }
-
-                @Test
-                void outputFormatsAsStringList() {
-                    var op = new PitestOperation().outputFormats(List.of(FOO, BAR));
-                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(FOO + ',' + BAR);
+                @ParameterizedTest
+                @EnumSource(PitestOperation.OutputFormat.class)
+                void outputFormatsEnums(PitestOperation.OutputFormat format) {
+                    var op = new PitestOperation().outputFormats(format);
+                    assertThat(op.options().get(OUTPUT_FORMATS)).isEqualTo(format.name());
                 }
             }
         }
@@ -935,6 +1179,16 @@ class PitestOperationTests {
                 var op = new PitestOperation().sourceDirs(List.of(FOO, BAR));
                 assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOO + ',' + BAR);
             }
+
+            @Test
+            void sourceDirsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .sourceDirs(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
         }
 
         @Nested
@@ -958,6 +1212,16 @@ class PitestOperationTests {
             }
 
             @Test
+            void targetClassesHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .targetClasses(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
+            }
+
+            @Test
             void targetTests() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
@@ -971,6 +1235,16 @@ class PitestOperationTests {
                         .fromProject(new Project())
                         .targetTests(List.of(FOO, BAR));
                 assertThat(op.options().get("--targetTests")).isEqualTo(FOOBAR);
+            }
+
+            @Test
+            void targetTestsHasBlanks() {
+                assertThatThrownBy(() ->
+                        new PitestOperation()
+                                .fromProject(new BaseProject())
+                                .targetTests(FOO, "", BAR))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("non-null and non-empty");
             }
         }
 
@@ -1016,11 +1290,51 @@ class PitestOperationTests {
             }
 
             @Test
-            void verbosity() {
+            void verbosityDefault() {
                 var op = new PitestOperation()
                         .fromProject(new Project())
-                        .verbosity(FOO);
-                assertThat(op.options().get("--verbosity")).isEqualTo(FOO);
+                        .verbosity(PitestOperation.Verbosity.DEFAULT);
+                assertThat(op.options().get("--verbosity")).isEqualTo("DEFAULT");
+            }
+
+            @Test
+            void verbosityNoSpinner() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .verbosity(PitestOperation.Verbosity.NO_SPINNER);
+                assertThat(op.options().get("--verbosity")).isEqualTo("NO_SPINNER");
+            }
+
+            @Test
+            void verbosityQuiet() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .verbosity(PitestOperation.Verbosity.QUIET);
+                assertThat(op.options().get("--verbosity")).isEqualTo("QUIET");
+            }
+
+            @Test
+            void verbosityVerbose() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .verbosity(PitestOperation.Verbosity.VERBOSE);
+                assertThat(op.options().get("--verbosity")).isEqualTo("VERBOSE");
+            }
+
+            @Test
+            void verbosityVerboseNoSpinner() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .verbosity(PitestOperation.Verbosity.VERBOSE_NO_SPINNER);
+                assertThat(op.options().get("--verbosity")).isEqualTo("VERBOSE_NO_SPINNER");
+            }
+
+            @Test
+            void verbosityVerboseSpinner() {
+                var op = new PitestOperation()
+                        .fromProject(new Project())
+                        .verbosity(PitestOperation.Verbosity.QUIET_WITH_PROGRESS);
+                assertThat(op.options().get("--verbosity")).isEqualTo("QUIET_WITH_PROGRESS");
             }
         }
     }

@@ -19,18 +19,17 @@ package rife.bld.extension;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
 import rife.bld.extension.tools.ClasspathTools;
+import rife.bld.extension.tools.CollectionTools;
 import rife.bld.extension.tools.ObjectTools;
 import rife.bld.extension.tools.TextTools;
 import rife.bld.operations.AbstractProcessOperation;
-import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Mutation testing and coverage with <a href="https://pitest.org">PIT</a>.
@@ -40,30 +39,12 @@ import java.util.logging.Logger;
  */
 public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
 
-    /**
-     * False constant.
-     */
-    protected static final String FALSE = "false";
-    /**
-     * True constant.
-     */
-    protected static final String TRUE = "true";
+    private static final String FALSE = Boolean.FALSE.toString();
     private static final Logger LOGGER = Logger.getLogger(PitestOperation.class.getName());
     private static final String SOURCE_DIRS = "--sourceDirs";
-    private final Map<String, String> options_ = new ConcurrentHashMap<>();
+    private static final String TRUE = Boolean.TRUE.toString();
+    private final Map<String, String> options_ = new LinkedHashMap<>();
     private BaseProject project_;
-
-    @Override
-    public void execute() throws IOException, InterruptedException, ExitStatusException {
-        if (project_ == null) {
-            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                LOGGER.severe("A project must be specified.");
-            }
-            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
-        } else {
-            super.execute();
-        }
-    }
 
     /**
      * Part of the {@link #execute} operation, constructs the command list
@@ -71,35 +52,23 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
+        Objects.requireNonNull(project_, "A project must be specified.");
+
         final List<String> args = new ArrayList<>();
 
-        if (project_ != null) {
-            args.add(javaTool());
-            args.add("-cp");
-            args.add(
-                    ClasspathTools.joinClasspath(
-                            ClasspathTools.joinClasspath(
-                                    project_.testClasspathJars(),
-                                    project_.compileClasspathJars(),
-                                    project_.providedClasspathJars()
-                            ),
-                            project_.buildMainDirectory().getAbsolutePath(),
-                            project_.buildTestDirectory().getAbsolutePath()
-                    )
-            );
-            args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
+        args.add(javaTool());
+        args.add("-cp");
+        args.add(buildClasspath());
+        args.add("org.pitest.mutationtest.commandline.MutationCoverageReport");
 
-            if (!options_.containsKey(SOURCE_DIRS)) {
-                options_.put(SOURCE_DIRS, project_.srcDirectory().getPath());
+        options_.putIfAbsent(SOURCE_DIRS, project_.srcDirectory().getPath());
+
+        options_.forEach((k, v) -> {
+            args.add(k);
+            if (!v.isEmpty()) {
+                args.add(v);
             }
-
-            options_.forEach((k, v) -> {
-                args.add(k);
-                if (!v.isEmpty()) {
-                    args.add(v);
-                }
-            });
-        }
+        });
 
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(String.join(" ", args));
@@ -115,9 +84,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @since 1.5
      */
     @Override
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public PitestOperation fromProject(BaseProject project) {
-        project_ = project;
+        project_ = Objects.requireNonNull(project, "The project must not be null");
         return this;
     }
 
@@ -128,10 +96,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation argLine(String line) {
-        if (TextTools.isNotBlank(line)) {
-            options_.put("--argLine", line);
-        }
-        return this;
+        return opt("--argLine", line);
     }
 
     /**
@@ -149,15 +114,12 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
      *
-     * @param avoidCallsTo the list of packages
+     * @param values the list of packages
      * @return this operation instance
      * @see #avoidCallsTo(String...)
      */
-    public PitestOperation avoidCallsTo(Collection<String> avoidCallsTo) {
-        if (ObjectTools.isNotEmpty(avoidCallsTo)) {
-            options_.put("--avoidCallsTo", String.join(",", avoidCallsTo.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation avoidCallsTo(Collection<String> values) {
+        return optJoin("--avoidCallsTo", values);
     }
 
     /**
@@ -175,110 +137,68 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
      *
-     * @param avoidCallTo one or more packages
+     * @param values the list of packages
      * @return this operation instance
      * @see #avoidCallsTo(Collection)
      */
-    public PitestOperation avoidCallsTo(String... avoidCallTo) {
-        if (ObjectTools.isNotEmpty(avoidCallTo)) {
-            return avoidCallsTo(List.of(avoidCallTo));
-        }
-        return this;
+    public PitestOperation avoidCallsTo(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "avoidCallsTo values must all be non-null and non-empty");
+        return avoidCallsTo(List.of(values));
     }
 
     /**
-     * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
-     * containing calls to these classes will not be mutated.
+     * List of additional classpath entries to use when looking for tests and mutable code.
      * <p>
-     * If a list is not explicitly supplied then PIT will default to a list of common logging packages as follows
-     * <p>
-     * <ul>
-     * <li>java.util.logging</li>
-     * <li>org.apache.log4j</li>
-     * <li>org.slf4j</li>
-     * <li>org.apache.commons.logging</li>
-     * </ul>
-     * <p>
-     * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
-     * Additional classpath entries to use when looking for tests and mutable code.
+     * These will be used in addition to the classpath with which PIT is launched.
      *
-     * @param path one or more paths
-     * @return this operation instance
-     * @see #classPath(Collection)
-     */
-    public PitestOperation classPath(String... path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return classPath(List.of(path));
-        }
-        return this;
-    }
-
-    /**
-     * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
-     * containing calls to these classes will not be mutated.
-     * <p>
-     * If a list is not explicitly supplied then PIT will default to a list of common logging packages as follows
-     * <p>
-     * <ul>
-     * <li>java.util.logging</li>
-     * <li>org.apache.log4j</li>
-     * <li>org.slf4j</li>
-     * <li>org.apache.commons.logging</li>
-     * </ul>
-     * <p>
-     * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
-     * Additional classpath entries to use when looking for tests and mutable code.
-     *
-     * @param path one or more paths
-     * @return this operation instance
-     * @see #classPathPaths(Collection)
-     */
-    public PitestOperation classPath(Path... path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return classPathPaths(List.of(path));
-        }
-        return this;
-    }
-
-    /**
-     * Additional classpath entries to use when looking for tests and mutable code.
-     *
-     * @param path the list of paths
+     * @param values the list of paths
      * @return this operation instance
      * @see #classPath(String...)
      */
-    public PitestOperation classPath(Collection<String> path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            options_.put("--classPath", String.join(",", path.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation classPath(Collection<String> values) {
+        return optJoin("--classPath", values);
     }
 
     /**
-     * List of packages and classes which are to be considered outside the scope of mutation. Any lines of code
-     * containing calls to these classes will not be mutated.
+     * List of additional classpath entries to use when looking for tests and mutable code.
      * <p>
-     * If a list is not explicitly supplied then PIT will default to a list of common logging packages as follows
-     * <p>
-     * <ul>
-     * <li>java.util.logging</li>
-     * <li>org.apache.log4j</li>
-     * <li>org.slf4j</li>
-     * <li>org.apache.commons.logging</li>
-     * </ul>
-     * <p>
-     * If the feature {@code FLOGCALL} is disabled, this parameter is ignored and logging calls are also mutated.
-     * Additional classpath entries to use when looking for tests and mutable code.
+     * These will be used in addition to the classpath with which PIT is launched.
      *
-     * @param path one or more paths
+     * @param values one or more paths
+     * @return this operation instance
+     * @see #classPath(Collection)
+     */
+    public PitestOperation classPath(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "classPath values must all be non-null and non-empty");
+        return classPath(List.of(values));
+    }
+
+    /**
+     * List of additional classpath entries to use when looking for tests and mutable code.
+     * <p>
+     * These will be used in addition to the classpath with which PIT is launched.
+     *
+     * @param values one or more paths
      * @return this operation instance
      * @see #classPathFiles(Collection)
      */
-    public PitestOperation classPath(File... path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return classPathFiles(List.of(path));
-        }
-        return this;
+    public PitestOperation classPath(File... values) {
+        ObjectTools.requireAllNotEmpty(values, "classPath values must all be non-null");
+        return classPathFiles(List.of(values));
+    }
+
+    /**
+     * List of additional classpath entries to use when looking for tests and mutable code.
+     * <p>
+     * These will be used in addition to the classpath with which PIT is launched.
+     *
+     * @param values one or more paths
+     * @return this operation instance
+     * @see #classPathPaths(Collection)
+     */
+    public PitestOperation classPath(Path... values) {
+        ObjectTools.requireAllNotEmpty(values, "classPath values must all be non-null");
+        return classPathPaths(List.of(values));
     }
 
     /**
@@ -286,40 +206,59 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param file the file
      * @return this operation instance
+     * @see #classPathFile(Path)
+     * @see #classPathFile(File)
      */
     public PitestOperation classPathFile(String file) {
-        if (TextTools.isNotBlank(file)) {
-            options_.put("--classPathFile", file);
-        }
-        return this;
+        return opt("--classPathFile", file);
+    }
+
+    /**
+     * File with a list of additional classpath elements (one per line).
+     *
+     * @param file the file
+     * @return this operation instance
+     * @see #classPathFile(Path)
+     * @see #classPathFile(File)
+     */
+    public PitestOperation classPathFile(File file) {
+        Objects.requireNonNull(file, "classPathFile must not be null");
+        return classPathFile(file.getAbsolutePath());
+    }
+
+    /**
+     * File with a list of additional classpath elements (one per line).
+     *
+     * @param path the file
+     * @return this operation instance
+     * @see #classPathFile(String)
+     * @see #classPathFile(File)
+     */
+    public PitestOperation classPathFile(Path path) {
+        Objects.requireNonNull(path, "classPathFile must not be null");
+        return classPathFile(path.toAbsolutePath().toString());
     }
 
     /**
      * Additional classpath entries to use when looking for tests and mutable code.
      *
-     * @param path the list of paths
+     * @param values the list of paths
      * @return this operation instance
      * @see #classPath(File...)
      */
-    public PitestOperation classPathFiles(Collection<File> path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return classPath(path.stream().map(File::getAbsolutePath).toList());
-        }
-        return this;
+    public final PitestOperation classPathFiles(Collection<File> values) {
+        return optFiles("--classPath", values);
     }
 
     /**
      * Additional classpath entries to use when looking for tests and mutable code.
      *
-     * @param path the list of paths
+     * @param values the list of paths
      * @return this operation instance
      * @see #classPath(Path...)
      */
-    public PitestOperation classPathPaths(Collection<Path> path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return classPath(path.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
-        }
-        return this;
+    public final PitestOperation classPathPaths(Collection<Path> values) {
+        return optFiles("--classPath", CollectionTools.combinePathsToFiles(values));
     }
 
     /**
@@ -331,6 +270,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #configDir(Path)
      */
     public PitestOperation configDir(File dir) {
+        Objects.requireNonNull(dir, "configDir must not be null");
         return configDir(dir.getAbsolutePath());
     }
 
@@ -343,6 +283,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #configDir(String)
      */
     public PitestOperation configDir(Path dir) {
+        Objects.requireNonNull(dir, "configDir must not be null");
         return configDir(dir.toFile());
     }
 
@@ -355,8 +296,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #configDir(File)
      */
     public PitestOperation configDir(String dir) {
-        options_.put("--configDir", dir);
-        return this;
+        return opt("--configDir", dir);
     }
 
     /**
@@ -369,6 +309,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation coverageThreshold(int threshold) {
         if (threshold >= 0 && threshold <= 100) {
             options_.put("--coverageThreshold", String.valueOf(threshold));
+        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
+            LOGGER.warning("Coverage threshold must be between 0 and 100.");
         }
         return this;
     }
@@ -402,16 +344,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * Defaults to {@code true}
      *
-     * @param isDetectInlinedCode {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation detectInlinedCode(boolean isDetectInlinedCode) {
-        if (isDetectInlinedCode) {
-            options_.put("--detectInlinedCode", TRUE);
-        } else {
-            options_.put("--detectInlinedCode", FALSE);
-        }
-        return this;
+    public PitestOperation detectInlinedCode(boolean value) {
+        return optBool("--detectInlinedCode", value);
     }
 
     /**
@@ -419,105 +356,84 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * Defaults to {@code false}
      *
-     * @param isDryRun {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation dryRun(boolean isDryRun) {
-        if (isDryRun) {
-            options_.put("--dryRun", TRUE);
-        } else {
-            options_.put("--dryRun", FALSE);
-        }
-        return this;
+    public PitestOperation dryRun(boolean value) {
+        return optBool("--dryRun", value);
     }
 
     /**
      * List of globs to match against class names. Matching classes will be excluded from mutation.
      *
-     * @param excludedClass the excluded classws
-     * @return this operation instance
-     * @see #excludedClasses(Collection)
-     */
-    public PitestOperation excludedClasses(String... excludedClass) {
-        if (ObjectTools.isNotEmpty(excludedClass)) {
-            return excludedClasses(List.of(excludedClass));
-        }
-        return this;
-    }
-
-    /**
-     * List of globs to match against class names. Matching classes will be excluded from mutation.
-     *
-     * @param excludedClasses the excluded classes
+     * @param values the excluded classes
      * @return this operation instance
      * @see #excludedClasses(String...)
      */
-    public PitestOperation excludedClasses(Collection<String> excludedClasses) {
-        if (ObjectTools.isNotEmpty(excludedClasses)) {
-            options_.put("--excludedClasses",
-                    String.join(",", excludedClasses.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation excludedClasses(Collection<String> values) {
+        return optJoin("--excludedClasses", values);
     }
 
     /**
-     * List of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories
-     * are supported.
+     * List of globs to match against class names. Matching classes will be excluded from mutation.
      *
-     * @param excludedGroup one or more excluded groups
+     * @param values the excluded classes
      * @return this operation instance
-     * @see #excludedGroups(Collection)
+     * @see #excludedClasses(Collection)
      */
-    public PitestOperation excludedGroups(String... excludedGroup) {
-        if (ObjectTools.isNotEmpty(excludedGroup)) {
-            return excludedGroups(List.of(excludedGroup));
-        }
-        return this;
+    public PitestOperation excludedClasses(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "excludedClasses values must all be non-null and non-empty");
+        return excludedClasses(List.of(values));
     }
 
     /**
-     * List of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories
-     * are supported.
+     * List of TestNG groups/JUnit categories to exclude from mutation analysis
+     * <p>
+     * Note that only class level categories are supported.
      *
-     * @param excludedGroups the excluded groups
+     * @param values the excluded groups
      * @return this operation instance
      * @see #excludedGroups(String...)
      */
-    public PitestOperation excludedGroups(Collection<String> excludedGroups) {
-        if (ObjectTools.isNotEmpty(excludedGroups)) {
-            options_.put("--excludedGroups", String.join(",",
-                    excludedGroups.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation excludedGroups(Collection<String> values) {
+        return optJoin("--excludedGroups", values);
     }
 
     /**
-     * List of globs to match against method names. Methods matching the globs will be excluded from mutation.
+     * List of TestNG groups/JUnit categories to exclude from mutation analysis
+     * <p>
+     * Note that only class level categories are supported.
      *
-     * @param excludedMethod one or more excluded methods
+     * @param values one or more excluded groups
      * @return this operation instance
-     * @see #excludedMethods(Collection)
+     * @see #excludedGroups(Collection)
      */
-    public PitestOperation excludedMethods(String... excludedMethod) {
-        if (ObjectTools.isNotEmpty(excludedMethod)) {
-            return excludedMethods(List.of(excludedMethod));
-        }
-        return this;
+    public PitestOperation excludedGroups(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "excludedGroups values must all be non-null and non-empty");
+        return excludedGroups(List.of(values));
     }
 
     /**
      * List of globs to match against method names. Methods matching the globs will be excluded from mutation.
      *
-     * @param excludedMethods the excluded methods
+     * @param values the excluded methods
      * @return this operation instance
      * @see #excludedMethods(String...)
      */
-    public PitestOperation excludedMethods(Collection<String> excludedMethods) {
-        if (ObjectTools.isNotEmpty(excludedMethods)) {
-            options_.put("--excludedMethods",
-                    String.join(",", excludedMethods.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation excludedMethods(Collection<String> values) {
+        return optJoin("--excludedMethods", values);
+    }
+
+    /**
+     * List of globs to match against method names. Methods matching the globs will be excluded from mutation.
+     *
+     * @param values one or more excluded methods
+     * @return this operation instance
+     * @see #excludedMethods(Collection)
+     */
+    public PitestOperation excludedMethods(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "excludedMethods values must all be non-null and non-empty");
+        return excludedMethods(List.of(values));
     }
 
     /**
@@ -526,40 +442,44 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param runners the runners
      * @return this operation instance
      */
-    public PitestOperation excludedRunners(String runners) {
-        options_.put("--excludedRunners", runners);
-        return this;
+    public PitestOperation excludedRunners(String... runners) {
+        ObjectTools.requireAllNotEmpty(runners, "excludedRunners values must all be non-null and non-empty");
+        return excludedRunners(List.of(runners));
     }
 
     /**
-     * List of globs to match against test class names. Matching tests will not be run (note if a test suite includes
-     * an excluded class, then it will “leak” back in).
+     * JUnit4 runners to exclude.
      *
-     * @param testClasses one or more excluded tests
+     * @param runners the runners
      * @return this operation instance
-     * @see #excludedTestClasses(Collection)
      */
-    public PitestOperation excludedTestClasses(String... testClasses) {
-        if (ObjectTools.isNotEmpty(testClasses)) {
-            return excludedTestClasses(List.of(testClasses));
-        }
-        return this;
+    public PitestOperation excludedRunners(Collection<String> runners) {
+        return optJoin("--excludedRunners", runners);
     }
 
     /**
      * List of globs to match against test class names. Matching tests will not be run (note if a test suite includes
-     * an excluded class, then it will “leak” back in).
+     * an excluded class, then it will "leak" back in).
      *
-     * @param testClasses the excluded tests
+     * @param values the excluded tests
      * @return this operation instance
      * @see #excludedTestClasses(String...)
      */
-    public PitestOperation excludedTestClasses(Collection<String> testClasses) {
-        if (ObjectTools.isNotEmpty(testClasses)) {
-            options_.put("--excludedTestClasses",
-                    String.join(",", testClasses.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation excludedTestClasses(Collection<String> values) {
+        return optJoin("--excludedTestClasses", values);
+    }
+
+    /**
+     * List of globs to match against test class names. Matching tests will not be run (note if a test suite includes
+     * an excluded class, then it will "leak" back in).
+     *
+     * @param values one or more excluded tests
+     * @return this operation instance
+     * @see #excludedTestClasses(Collection)
+     */
+    public PitestOperation excludedTestClasses(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "excludedTestClasses values must all be non-null and non-empty");
+        return excludedTestClasses(List.of(values));
     }
 
     /**
@@ -567,76 +487,54 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * Defaults to {@code false}
      *
-     * @param jsExport {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation exportLineCoverage(boolean jsExport) {
-        if (jsExport) {
-            options_.put("--exportLineCoverage", TRUE);
-        } else {
-            options_.put("--exportLineCoverage", FALSE);
-        }
-        return this;
-    }
-
-    /**
-     * Whether to throw an error when no mutations found.
-     * <p>
-     * Defaults to {@code true}
-     *
-     * @param isFail {@code true} or {@code false}
-     * @return this operation instance
-     */
-    public PitestOperation failWhenNoMutations(boolean isFail) {
-        if (isFail) {
-            options_.put("--failWhenNoMutations", TRUE);
-        } else {
-            options_.put("--failWhenNoMutations", FALSE);
-        }
-        return this;
-    }
-
-    /**
-     * List of features to enable/disable
-     *
-     * @param feature the list of features
-     * @return this operation instance
-     * @see #features(String...)
-     */
-    public PitestOperation features(Collection<String> feature) {
-        if (ObjectTools.isNotEmpty(feature)) {
-            options_.put("--features", String.join(",", feature.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
-    }
-
-    /**
-     * List of features to enable/disable
-     *
-     * @param feature one or more features
-     * @return this operation instance
-     * @see #features(Collection)
-     */
-    public PitestOperation features(String... feature) {
-        if (ObjectTools.isNotEmpty(feature)) {
-            return features(List.of(feature));
-        }
-        return this;
+    public PitestOperation exportLineCoverage(boolean value) {
+        return optBool("--exportLineCoverage", value);
     }
 
     /**
      * Whether to create a full mutation matrix
      *
-     * @param isFullMutationMatrix {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation fullMutationMatrix(boolean isFullMutationMatrix) {
-        if (isFullMutationMatrix) {
-            options_.put("--fullMutationMatrix", TRUE);
-        } else {
-            options_.put("--fullMutationMatrix", FALSE);
-        }
-        return this;
+    public PitestOperation failWhenNoMutations(boolean value) {
+        return optBool("--failWhenNoMutations", value);
+    }
+
+    /**
+     * List of features to enable/disable
+     *
+     * @param values one or more features
+     * @return this operation instance
+     * @see #features(String...)
+     */
+    public final PitestOperation features(Collection<String> values) {
+        return optJoin("--features", values);
+    }
+
+    /**
+     * List of features to enable/disable
+     *
+     * @param values one or more features
+     * @return this operation instance
+     * @see #features(Collection)
+     */
+    public PitestOperation features(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "features values must all be non-null and non-empty");
+        return features(List.of(values));
+    }
+
+    /**
+     * Whether to create a full mutation matrix
+     *
+     * @param value {@code true} or {@code false}
+     * @return this operation instance
+     */
+    public PitestOperation fullMutationMatrix(boolean value) {
+        return optBool("--fullMutationMatrix", value);
     }
 
     /**
@@ -644,12 +542,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param path the path
      * @return this operation instance
+     * @see #historyInputLocation(File)
+     * @see #historyInputLocation(Path)
      */
     public PitestOperation historyInputLocation(String path) {
-        if (TextTools.isNotBlank(path)) {
-            options_.put("--historyInputLocation", path);
-        }
-        return this;
+        return opt("--historyInputLocation", path);
     }
 
     /**
@@ -657,8 +554,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param path the path
      * @return this operation instance
+     * @see #historyInputLocation(String)
+     * @see #historyInputLocation(Path)
      */
     public PitestOperation historyInputLocation(File path) {
+        Objects.requireNonNull(path, "historyInputLocation must not be null");
         return historyInputLocation(path.getAbsolutePath());
     }
 
@@ -667,44 +567,52 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param path the path
      * @return this operation instance
+     * @see #historyInputLocation(String)
+     * @see #historyInputLocation(File)
      */
     public PitestOperation historyInputLocation(Path path) {
+        Objects.requireNonNull(path, "historyInputLocation must not be null");
         return historyInputLocation(path.toFile());
     }
 
     /**
      * Path to write history information for incremental analysis. May be the same as
-     * {@link #historyInputLocation(String)
+     * {@link #historyInputLocation(String)}.
      *
      * @param path the path
      * @return this operation instance
+     * @see #historyOutputLocation(File)
+     * @see #historyOutputLocation(Path)
      */
     public PitestOperation historyOutputLocation(String path) {
-        if (TextTools.isNotBlank(path)) {
-            options_.put("--historyOutputLocation", path);
-        }
-        return this;
+        return opt("--historyOutputLocation", path);
     }
 
     /**
      * Path to write history information for incremental analysis. May be the same as
-     * {@link #historyInputLocation(String)
+     * {@link #historyInputLocation(String)}.
      *
      * @param path the path
      * @return this operation instance
+     * @see #historyOutputLocation(String)
+     * @see #historyOutputLocation(Path)
      */
     public PitestOperation historyOutputLocation(File path) {
+        Objects.requireNonNull(path, "historyOutputLocation must not be null");
         return historyOutputLocation(path.getAbsolutePath());
     }
 
     /**
      * Path to write history information for incremental analysis. May be the same as
-     * {@link #historyInputLocation(String)
+     * {@link #historyInputLocation(String)}.
      *
      * @param path the path
      * @return this operation instance
+     * @see #historyOutputLocation(String)
+     * @see #historyOutputLocation(File)
      */
     public PitestOperation historyOutputLocation(Path path) {
+        Objects.requireNonNull(path, "historyOutputLocation must not be null");
         return historyOutputLocation(path.toFile());
     }
 
@@ -715,58 +623,57 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * Defaults to {@code true}
      *
-     * @param isLaunchClasspath {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation includeLaunchClasspath(boolean isLaunchClasspath) {
-        if (isLaunchClasspath) {
-            options_.put("--includeLaunchClasspath", TRUE);
-        } else {
-            options_.put("--includeLaunchClasspath", FALSE);
-        }
-        return this;
+    public PitestOperation includeLaunchClasspath(boolean value) {
+        return optBool("--includeLaunchClasspath", value);
     }
 
     /**
-     * list of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories
-     * are supported.
-     *
-     * @param includedGroup one or more included groups
-     * @return this operation instance
-     * @see #includedGroups(Collection)
-     */
-    public PitestOperation includedGroups(String... includedGroup) {
-        if (ObjectTools.isNotEmpty(includedGroup)) {
-            return includedGroups(List.of(includedGroup));
-        }
-        return this;
-    }
-
-    /**
-     * list of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories are
+     * List of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories are
      * supported.
      *
-     * @param includedGroups the list of included groups
+     * @param values the list of included groups
      * @return this operation instance
      * @see #includedGroups(String...)
      */
-    public PitestOperation includedGroups(Collection<String> includedGroups) {
-        if (ObjectTools.isNotEmpty(includedGroups)) {
-            options_.put("--includedGroups",
-                    String.join(",", includedGroups.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation includedGroups(Collection<String> values) {
+        return optJoin("--includedGroups", values);
+    }
+
+    /**
+     * List of TestNG groups/JUnit categories to include in mutation analysis. Note that only class level categories
+     * are supported.
+     *
+     * @param values one or more included groups
+     * @return this operation instance
+     */
+    public PitestOperation includedGroups(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "includedGroups values must all be non-null and non-empty");
+        return includedGroups(List.of(values));
     }
 
     /**
      * Test methods that should be included for challenging the mutants.
      *
-     * @param testMethod the test method
+     * @param testMethod the test methods
      * @return this operation instance
      */
-    public PitestOperation includedTestMethods(String testMethod) {
-        options_.put("--includedTestMethods", testMethod);
-        return this;
+    public PitestOperation includedTestMethods(String... testMethod) {
+        ObjectTools.requireAllNotEmpty(testMethod,
+                "includedTestMethods values must all be non-null and non-empty");
+        return includedTestMethods(List.of(testMethod));
+    }
+
+    /**
+     * Test methods that should be included for challenging the mutants.
+     *
+     * @param testMethod the test methods
+     * @return this operation instance
+     */
+    public PitestOperation includedTestMethods(Collection<String> testMethod) {
+        return optJoin("--includedTestMethods", testMethod);
     }
 
     /**
@@ -778,25 +685,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation inputEncoding(String encoding) {
-        if (TextTools.isNotBlank(encoding)) {
-            options_.put("--inputEncoding", encoding);
-        }
-        return this;
-    }
-
-    /**
-     * Argument string to use when PIT launches child processes. This is most commonly used to increase the amount of
-     * memory available to the process, but may be used to pass any valid JVM argument.
-     *
-     * @param args one or moe args
-     * @return this operation instance
-     * @see #jvmArgs(Collection)
-     */
-    public PitestOperation jvmArgs(String... args) {
-        if (ObjectTools.isNotEmpty(args)) {
-            return jvmArgs(List.of(args));
-        }
-        return this;
+        return opt("--inputEncoding", encoding);
     }
 
     /**
@@ -807,12 +696,21 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #jvmArgs(String...)
      */
-    public PitestOperation jvmArgs(Collection<String> args) {
-        if (ObjectTools.isNotEmpty(args)) {
-            options_.put("--jvmArgs", String.join(",",
-                    args.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation jvmArgs(Collection<String> args) {
+        return optJoin("--jvmArgs", args);
+    }
+
+    /**
+     * Argument string to use when PIT launches child processes. This is most commonly used to increase the amount of
+     * memory available to the process, but may be used to pass any valid JVM argument.
+     *
+     * @param args one or more args
+     * @return this operation instance
+     * @see #jvmArgs(Collection)
+     */
+    public PitestOperation jvmArgs(String... args) {
+        ObjectTools.requireAllNotEmpty(args, "jvmArgs values must all be non-null and non-empty");
+        return jvmArgs(List.of(args));
     }
 
     /**
@@ -821,12 +719,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param path the path
      * @return this operation instance
+     * @see #jvmPath(File)
+     * @see #jvmPath(Path)
      */
     public PitestOperation jvmPath(String path) {
-        if (TextTools.isNotBlank(path)) {
-            options_.put("--jvmPath", path);
-        }
-        return this;
+        return opt("--jvmPath", path);
     }
 
     /**
@@ -835,8 +732,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param path the path
      * @return this operation instance
+     * @see #jvmPath(Path)
+     * @see #jvmPath(String)
      */
     public PitestOperation jvmPath(File path) {
+        Objects.requireNonNull(path, "jvmPath must not be null");
         return jvmPath(path.getAbsolutePath());
     }
 
@@ -846,30 +746,33 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param path the path
      * @return this operation instance
+     * @see #jvmPath(File)
+     * @see #jvmPath(String)
      */
     public PitestOperation jvmPath(Path path) {
+        Objects.requireNonNull(path, "jvmPath must not be null");
         return jvmPath(path.toFile());
     }
 
     /**
      * Maximum number of surviving mutants to allow without throwing an error.
      *
-     * @param maxMutationsPerClass the max number
+     * @param max the max number
      * @return this operation instance
      */
-    public PitestOperation maxMutationsPerClass(int maxMutationsPerClass) {
-        options_.put("--maxMutationsPerClass", String.valueOf(maxMutationsPerClass));
+    public PitestOperation maxMutationsPerClass(int max) {
+        options_.put("--maxMutationsPerClass", String.valueOf(max));
         return this;
     }
 
     /**
      * Maximum number of surviving mutants to allow without throwing an error.
      *
-     * @param maxSurviving the maximin number
+     * @param max the maximum number
      * @return this operation instance
      */
-    public PitestOperation maxSurviving(int maxSurviving) {
-        options_.put("--maxSurviving", String.valueOf(maxSurviving));
+    public PitestOperation maxSurviving(int max) {
+        options_.put("--maxSurviving", String.valueOf(max));
         return this;
     }
 
@@ -883,79 +786,12 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
      *
-     * @param path one or one paths
-     * @return this operation instance
-     * @see #mutableCodePaths(Collection)
-     */
-    public PitestOperation mutableCodePaths(String... path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return mutableCodePaths(List.of(path));
-        }
-        return this;
-    }
-
-    /**
-     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
-     * directories for tests and production classes this parameter should be set to your code output directory in order
-     * to avoid mutating test helper classes etc.
-     * <p>
-     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
-     * as being a candidate for mutation.
-     * <p>
-     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
-     *
-     * @param path one or one paths
-     * @return this operation instance
-     * @see #mutableCodePathsPaths(Collection)
-     */
-    public PitestOperation mutableCodePaths(Path... path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return mutableCodePathsPaths(List.of(path));
-        }
-        return this;
-    }
-
-    /**
-     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
-     * directories for tests and production classes this parameter should be set to your code output directory in order
-     * to avoid mutating test helper classes etc.
-     * <p>
-     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
-     * as being a candidate for mutation.
-     * <p>
-     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
-     *
-     * @param path one or one paths
-     * @return this operation instance
-     * @see #mutableCodePathsFiles(Collection)
-     */
-    public PitestOperation mutableCodePaths(File... path) {
-        if (ObjectTools.isNotEmpty(path)) {
-            return mutableCodePathsFiles(List.of(path));
-        }
-        return this;
-    }
-
-    /**
-     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
-     * directories for tests and production classes this parameter should be set to your code output directory in order
-     * to avoid mutating test helper classes etc.
-     * <p>
-     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
-     * as being a candidate for mutation.
-     * <p>
-     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
-     *
-     * @param paths the list of paths
+     * @param values the list of values
      * @return this operation instance
      * @see #mutableCodePaths(String...)
      */
-    public PitestOperation mutableCodePaths(Collection<String> paths) {
-        if (ObjectTools.isNotEmpty(paths)) {
-            options_.put("--mutableCodePaths",
-                    String.join(",", paths.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation mutableCodePaths(Collection<String> values) {
+        return optJoin("--mutableCodePaths", values);
     }
 
     /**
@@ -968,15 +804,69 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
      *
-     * @param paths the list of paths
+     * @param values one or more values
+     * @return this operation instance
+     * @see #mutableCodePaths(Collection)
+     */
+    public PitestOperation mutableCodePaths(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "mutableCodePaths values must all be non-null and non-empty");
+        return mutableCodePaths(List.of(values));
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param values one or more values
+     * @return this operation instance
+     * @see #mutableCodePathsFiles(Collection)
+     */
+    public PitestOperation mutableCodePaths(File... values) {
+        ObjectTools.requireAllNotEmpty(values, "mutableCodePaths values must all be non-null");
+        return mutableCodePathsFiles(List.of(values));
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param values one or more values
+     * @return this operation instance
+     * @see #mutableCodePathsPaths(Collection)
+     */
+    public PitestOperation mutableCodePaths(Path... values) {
+        ObjectTools.requireAllNotEmpty(values, "mutableCodePaths values must all be non-null");
+        return mutableCodePathsPaths(List.of(values));
+    }
+
+    /**
+     * List of classpaths which should be considered to contain mutable code. If your build maintains separate output
+     * directories for tests and production classes this parameter should be set to your code output directory in order
+     * to avoid mutating test helper classes etc.
+     * <p>
+     * If no mutableCodePath is supplied PIT will default to considering anything not defined within a jar or zip file
+     * as being a candidate for mutation.
+     * <p>
+     * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
+     *
+     * @param values the list of values
      * @return this operation instance
      * @see #mutableCodePaths(File...)
      */
-    public PitestOperation mutableCodePathsFiles(Collection<File> paths) {
-        if (ObjectTools.isNotEmpty(paths)) {
-            return mutableCodePaths(paths.stream().map(File::getAbsolutePath).toList());
-        }
-        return this;
+    public final PitestOperation mutableCodePathsFiles(Collection<File> values) {
+        return optFiles("--mutableCodePaths", values);
     }
 
     /**
@@ -989,15 +879,12 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * PIT will always attempt not to mutate test classes even if they are defined on a mutable path.
      *
-     * @param paths the list of paths
+     * @param values the list of values
      * @return this operation instance
      * @see #mutableCodePaths(Path...)
      */
-    public PitestOperation mutableCodePathsPaths(Collection<Path> paths) {
-        if (ObjectTools.isNotEmpty(paths)) {
-            return mutableCodePaths(paths.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
-        }
-        return this;
+    public final PitestOperation mutableCodePathsPaths(Collection<Path> values) {
+        return optFiles("--mutableCodePaths", CollectionTools.combinePathsToFiles(values));
     }
 
     /**
@@ -1009,8 +896,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation mutationEngine(String engine) {
-        options_.put("--mutationEngine", engine);
-        return this;
+        return opt("--mutationEngine", engine);
     }
 
     /**
@@ -1026,6 +912,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     public PitestOperation mutationThreshold(int threshold) {
         if (threshold >= 0 && threshold <= 100) {
             options_.put("--mutationThreshold", String.valueOf(threshold));
+        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
+            LOGGER.warning("Mutation threshold must be between 0 and 100.");
         }
         return this;
     }
@@ -1044,29 +932,24 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     /**
      * List of mutation operators.
      *
-     * @param mutator one or more mutators
+     * @param values one or more mutators
      * @return this operation instance
-     * @see #mutators(Collection)
+     * @see #mutators(String...)
      */
-    public PitestOperation mutators(String... mutator) {
-        if (ObjectTools.isNotEmpty(mutator)) {
-            options_.put("--mutators", String.join(",", Arrays.stream(mutator).filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation mutators(Collection<String> values) {
+        return optJoin("--mutators", values);
     }
 
     /**
      * List of mutation operators.
      *
-     * @param mutators the list of mutators
+     * @param values the list of mutators
      * @return this operation instance
-     * @see #mutators(String...)
+     * @see #mutators(Collection)
      */
-    public PitestOperation mutators(Collection<String> mutators) {
-        if (ObjectTools.isNotEmpty(mutators)) {
-            options_.put("--mutators", String.join(",", mutators.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public PitestOperation mutators(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "mutators values must all be non-null and non-empty");
+        return mutators(List.of(values));
     }
 
     /**
@@ -1088,124 +971,39 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation outputEncoding(String encoding) {
-        if (TextTools.isNotBlank(encoding)) {
-            options_.put("--outputEncoding", encoding);
-        }
-        return this;
+        return opt("--outputEncoding", encoding);
     }
 
     /**
      * A list of formats in which to write mutation results as the mutations are analysed.
-     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
      * <p>
-     * Defaults to {@code HTML}.
-     *
-     * @param outputFormat one or more output formats
-     * @return this operation instance
-     * @see #outputFormatsFiles(Collection)
-     */
-    public PitestOperation outputFormats(File... outputFormat) {
-        if (ObjectTools.isNotEmpty(outputFormat)) {
-            return outputFormatsFiles(List.of(outputFormat));
-        }
-        return this;
-    }
-
-    /**
-     * A list of formats in which to write mutation results as the mutations are analysed.
-     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
+     * Supported formats are {@link OutputFormat#HTML}, {@link OutputFormat#XML}, {@link OutputFormat#CSV}.
      * <p>
-     * Defaults to {@code HTML}.
+     * Defaults to {@link OutputFormat#HTML}.
      *
-     * @param outputFormat one or more output formats
+     * @param formats one or more output formats
      * @return this operation instance
-     * @see #outputFormatsPaths(Collection)
      */
-    public PitestOperation outputFormats(Path... outputFormat) {
-        if (ObjectTools.isNotEmpty(outputFormat)) {
-            return outputFormatsPaths(List.of(outputFormat));
-        }
-        return this;
-    }
-
-    /**
-     * A list of formats in which to write mutation results as the mutations are analysed.
-     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
-     * <p>
-     * Defaults to {@code HTML}.
-     *
-     * @param outputFormat one or more output formats
-     * @return this operation instance
-     * @see #outputFormats(Collection)
-     */
-    public PitestOperation outputFormats(String... outputFormat) {
-        if (ObjectTools.isNotEmpty(outputFormat)) {
-            return outputFormats(List.of(outputFormat));
-        }
-        return this;
-    }
-
-    /**
-     * A list of formats in which to write mutation results as the mutations are analysed.
-     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
-     * <p>
-     * Defaults to {@code HTML}.
-     *
-     * @param outputFormats the list of output formats
-     * @return this operation instance
-     * @see #outputFormats(String...)
-     */
-    public PitestOperation outputFormats(Collection<String> outputFormats) {
-        if (ObjectTools.isNotEmpty(outputFormats)) {
-            options_.put("--outputFormats",
-                    String.join(",", outputFormats.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
-    }
-
-    /**
-     * A list of formats in which to write mutation results as the mutations are analysed.
-     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
-     * <p>
-     * Defaults to {@code HTML}.
-     *
-     * @param outputFormats the list of output formats
-     * @return this operation instance
-     * @see #outputFormats(File...)
-     */
-    public PitestOperation outputFormatsFiles(Collection<File> outputFormats) {
-        if (ObjectTools.isNotEmpty(outputFormats)) {
-            return outputFormats(outputFormats.stream().map(File::getAbsolutePath).toList());
-        }
-        return this;
-    }
-
-    /**
-     * A list of formats in which to write mutation results as the mutations are analysed.
-     * Supported formats are {@code HTML}, {@code XML}, {@code CSV}.
-     * <p>
-     * Defaults to {@code HTML}.
-     *
-     * @param outputFormats the list of output formats
-     * @return this operation instance
-     * @see #outputFormats(Path...)
-     */
-    public PitestOperation outputFormatsPaths(Collection<Path> outputFormats) {
-        if (ObjectTools.isNotEmpty(outputFormats)) {
-            return outputFormats(outputFormats.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
-        }
+    public PitestOperation outputFormats(OutputFormat... formats) {
+        ObjectTools.requireAllNotEmpty(formats, "outputFormats must not be null");
+        options_.put("--outputFormats",
+                Arrays.stream(formats).map(Enum::name).distinct().collect(Collectors.joining(",")));
         return this;
     }
 
     /**
      * Custom plugin properties.
      *
-     * @param key   the key
-     * @param value the value
+     * @param configuration the configuration keys and values
      * @return this operation instance
      */
-    public PitestOperation pluginConfiguration(String key, String value) {
-        options_.put("--pluginConfiguration", key + '=' + value);
+    public PitestOperation pluginConfiguration(Map<String, String> configuration) {
+        ObjectTools.requireAllNotEmpty(configuration,
+                "pluginConfiguration keys and values must be non-null and non-empty");
+        var joined = configuration.entrySet().stream()
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.joining(","));
+        options_.put("--pluginConfiguration", joined);
         return this;
     }
 
@@ -1214,10 +1012,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param file the file
      * @return this operations instance
+     * @see #projectBase(File)
+     * @see #projectBase(Path)
      */
     public PitestOperation projectBase(String file) {
-        options_.put("--projectBase", file);
-        return this;
+        return opt("--projectBase", file);
     }
 
     /**
@@ -1225,8 +1024,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param file the file
      * @return this operations instance
+     * @see #projectBase(String)
+     * @see #projectBase(Path)
      */
     public PitestOperation projectBase(File file) {
+        Objects.requireNonNull(file, "projectBase must not be null");
         return projectBase(file.getAbsolutePath());
     }
 
@@ -1235,8 +1037,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param file the file
      * @return this operations instance
+     * @see #projectBase(String)
+     * @see #projectBase(File)
      */
     public PitestOperation projectBase(Path file) {
+        Objects.requireNonNull(file, "projectBase must not be null");
         return projectBase(file.toFile());
     }
 
@@ -1245,12 +1050,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param dir the directory
      * @return this operation instance
+     * @see #reportDir(File)
+     * @see #reportDir(Path)
      */
     public PitestOperation reportDir(String dir) {
-        if (TextTools.isNotBlank(dir)) {
-            options_.put("--reportDir", dir);
-        }
-        return this;
+        return opt("--reportDir", dir);
     }
 
     /**
@@ -1258,8 +1062,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param dir the directory
      * @return this operation instance
+     * @see #reportDir(String)
+     * @see #reportDir(Path)
      */
     public PitestOperation reportDir(File dir) {
+        Objects.requireNonNull(dir, "reportDir must not be null");
         return reportDir(dir.getAbsolutePath());
     }
 
@@ -1268,68 +1075,60 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      *
      * @param dir the directory
      * @return this operation instance
+     * @see #reportDir(String)
+     * @see #reportDir(File)
      */
     public PitestOperation reportDir(Path dir) {
+        Objects.requireNonNull(dir, "reportDir must not be null");
         return reportDir(dir.toFile());
     }
 
     /**
-     * whether to ignore failing tests when computing coverage.
+     * Whether to ignore failing tests when computing coverage.
      * <p>
      * Default is {@code false}
      *
-     * @param isSkipFail {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation skipFailingTests(boolean isSkipFail) {
-        if (isSkipFail) {
-            options_.put("--skipFailingTests", TRUE);
-        } else {
-            options_.put("--skipFailingTests", FALSE);
-        }
-        return this;
+    public PitestOperation skipFailingTests(boolean value) {
+        return optBool("--skipFailingTests", value);
     }
 
     /**
      * The folder(s) containing the source code.
      *
-     * @param dir one or more directories
+     * @param dirs one or more directories
      * @return this operation instance
      * @see #sourceDirs(Collection)
      */
-    public PitestOperation sourceDirs(String... dir) {
-        if (ObjectTools.isNotEmpty(dir)) {
-            return sourceDirs(List.of(dir));
-        }
-        return this;
+    public PitestOperation sourceDirs(String... dirs) {
+        ObjectTools.requireAllNotEmpty(dirs, "sourceDirs values must all be non-null and non-empty");
+        return sourceDirs(List.of(dirs));
     }
 
     /**
      * The folder(s) containing the source code.
      *
-     * @param dir one or more directories
+     * @param dirs one or more directories
      * @return this operation instance
      * @see #sourceDirsFiles(Collection)
      */
-    public PitestOperation sourceDirs(File... dir) {
-        if (ObjectTools.isNotEmpty(dir)) {
-            return sourceDirsFiles(List.of(dir));
-        }
-        return this;
+    public PitestOperation sourceDirs(File... dirs) {
+        ObjectTools.requireAllNotEmpty(dirs, "sourceDirs values must all be non-null");
+        return sourceDirsFiles(List.of(dirs));
     }
 
     /**
      * The folder(s) containing the source code.
      *
-     * @param dir one or more directories
+     * @param dirs one or more directories
      * @return this operation instance
      * @see #sourceDirsPaths(Collection)
      */
-    public PitestOperation sourceDirs(Path... dir) {
-        if (ObjectTools.isNotEmpty(dir)) {
-            return sourceDirsPaths(List.of(dir));
-        }
-        return this;
+    public PitestOperation sourceDirs(Path... dirs) {
+        ObjectTools.requireAllNotEmpty(dirs, "sourceDirs values must all be non-null");
+        return sourceDirsPaths(List.of(dirs));
     }
 
     /**
@@ -1339,11 +1138,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(String...)
      */
-    public PitestOperation sourceDirs(Collection<String> dirs) {
-        if (ObjectTools.isNotEmpty(dirs)) {
-            options_.put(SOURCE_DIRS, String.join(",", dirs.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation sourceDirs(Collection<String> dirs) {
+        return optJoin(SOURCE_DIRS, dirs);
     }
 
     /**
@@ -1353,11 +1149,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(File...)
      */
-    public PitestOperation sourceDirsFiles(Collection<File> dirs) {
-        if (ObjectTools.isNotEmpty(dirs)) {
-            return sourceDirs(dirs.stream().map(File::getAbsolutePath).toList());
-        }
-        return this;
+    public final PitestOperation sourceDirsFiles(Collection<File> dirs) {
+        return optFiles(SOURCE_DIRS, dirs);
     }
 
     /**
@@ -1367,11 +1160,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(Path...)
      */
-    public PitestOperation sourceDirsPaths(Collection<Path> dirs) {
-        if (ObjectTools.isNotEmpty(dirs)) {
-            return sourceDirs(dirs.stream().map(Path::toFile).map(File::getAbsolutePath).toList());
-        }
-        return this;
+    public final PitestOperation sourceDirsPaths(Collection<Path> dirs) {
+        return optFiles(SOURCE_DIRS, CollectionTools.combinePathsToFiles(dirs));
     }
 
     /**
@@ -1379,88 +1169,83 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * For example:
      * <p><ul>
-     * <li>{@code com.myompany.*}</li>
+     * <li>{@code com.mycompany.*}</li>
      * <li>{@code com.mycompany.package.*, com.mycompany.packageB.Foo, com.partner.*}</li>
      * </ul></p>
      *
-     * @param targetClass the list of target classes
-     * @return this operation instance
-     * @see #targetClasses(Collection)
-     */
-    public PitestOperation targetClasses(Collection<String> targetClass) {
-        if (ObjectTools.isNotEmpty(targetClass)) {
-            options_.put("--targetClasses",
-                    String.join(",", targetClass.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
-    }
-
-    /**
-     * The classes to be mutated. This is expressed as a list of globs.
-     * <p>
-     * For example:
-     * <p><ul>
-     * <li>{@code com.myompany.*}</li>
-     * <li>{@code com.mycompany.package.*, com.mycompany.packageB.Foo, com.partner.*}</li>
-     * </ul></p>
-     *
-     * @param targetClass one or more target classes
+     * @param values the list of target classes
      * @return this operation instance
      * @see #targetClasses(String...)
      */
-    public PitestOperation targetClasses(String... targetClass) {
-        if (ObjectTools.isNotEmpty(targetClass)) {
-            return targetClasses(List.of(targetClass));
-        }
-        return this;
+    public final PitestOperation targetClasses(Collection<String> values) {
+        return optJoin("--targetClasses", values);
     }
 
     /**
-     * A list of globs can be supplied to this parameter to limit the tests available to be run.
-     * If this parameter is not supplied then any test fixture that matched targetClasses may be used, it is however
-     * recommended that this parameter is always explicitly set.
+     * The classes to be mutated. This is expressed as a list of globs.
      * <p>
-     * This parameter can be used to point PIT to a top level suite or suites. Custom suites such as
-     * <a href="https://github.com/takari/takari-cpsuite"></a>ClassPathSuite</a> are supported.
+     * For example:
+     * <p><ul>
+     * <li>{@code com.mycompany.*}</li>
+     * <li>{@code com.mycompany.package.*, com.mycompany.packageB.Foo, com.partner.*}</li>
+     * </ul></p>
      *
-     * @param test one or more tests
+     * @param values one or more target classes
      * @return this operation instance
-     * @see #targetTests(Collection)
+     * @see #targetClasses(Collection)
      */
-    public PitestOperation targetTests(String... test) {
-        if (ObjectTools.isNotEmpty(test)) {
-            return targetTests(List.of(test));
-        }
-        return this;
+    public PitestOperation targetClasses(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "targetClasses values must all be non-null and non-empty");
+        return targetClasses(List.of(values));
     }
 
     /**
      * A list of globs can be supplied to this parameter to limit the tests available to be run.
-     * If this parameter is not supplied then any test fixture that matched targetClasses may be used, it is however
-     * recommended that this parameter is always explicitly set.
+     * If this parameter is not supplied then any test fixture that matched targetClasses may be used,
+     * it is however recommended that this parameter is always explicitly set.
      * <p>
      * This parameter can be used to point PIT to a top level suite or suites. Custom suites such as
      * <a href="https://github.com/takari/takari-cpsuite"></a>ClassPathSuite</a> are supported.
      *
-     * @param tests the list of tests
+     * @param values the list of tests
      * @return this operation instance
      * @see #targetTests(String...)
      */
-    public PitestOperation targetTests(Collection<String> tests) {
-        if (ObjectTools.isNotEmpty(tests)) {
-            options_.put("--targetTests", String.join(",", tests.stream().filter(TextTools::isNotBlank).toList()));
-        }
-        return this;
+    public final PitestOperation targetTests(Collection<String> values) {
+        return optJoin("--targetTests", values);
+    }
+
+    /**
+     * A list of globs can be supplied to this parameter to limit the tests available to be run.
+     * If this parameter is not supplied then any test fixture that matched targetClasses may be used, it is however
+     * recommended that this parameter is always explicitly set.
+     * <p>
+     * This parameter can be used to point PIT to a top level suite or suites. Custom suites such as
+     * <a href="https://github.com/takari/takari-cpsuite"></a>ClassPathSuite</a> are supported.
+     *
+     * @param values one or more tests
+     * @return this operation instance
+     * @see #targetTests(Collection)
+     */
+    public PitestOperation targetTests(String... values) {
+        ObjectTools.requireAllNotEmpty(values, "targetTests values must all be non-null and non-empty");
+        return targetTests(List.of(values));
     }
 
     /**
      * Test strength score below which to throw an error.
+     * <p>
+     * Threshold must be between 0 and 100.
      *
      * @param threshold the threshold
      * @return this operation instance
      */
     public PitestOperation testStrengthThreshold(int threshold) {
-        options_.put("--testStrengthThreshold", String.valueOf(threshold));
+        if (threshold >= 0 && threshold <= 100) {
+            options_.put("--testStrengthThreshold", String.valueOf(threshold));
+        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
+            LOGGER.warning("Test strength threshold must be between 0 and 100.");
+        }
         return this;
     }
 
@@ -1503,21 +1288,17 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     /**
-     * By default, PIT will create a date and time stamped folder for its output each time it is run. This can can make
-     * automation difficult, so the behaviour can be suppressed by passing {@code false}.
+     * By default, PIT will create a date and time stamped folder for its output
+     * each time it is run. This can can make automation difficult, so the
+     * behaviour can be suppressed by passing {@code false}.
      * <p>
      * Defaults to {@code false}
      *
-     * @param isTimestamped {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation timestampedReports(boolean isTimestamped) {
-        if (isTimestamped) {
-            options_.put("--timestampedReports", TRUE);
-        } else {
-            options_.put("--timestampedReports", FALSE);
-        }
-        return this;
+    public PitestOperation timestampedReports(boolean value) {
+        return optBool("--timestampedReports", value);
     }
 
     /**
@@ -1525,16 +1306,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * Defaults to {@code false}
      *
-     * @param isUseClasspathJar {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation useClasspathJar(boolean isUseClasspathJar) {
-        if (isUseClasspathJar) {
-            options_.put("--useClasspathJar", TRUE);
-        } else {
-            options_.put("--useClasspathJar", FALSE);
-        }
-        return this;
+    public PitestOperation useClasspathJar(boolean value) {
+        return optBool("--useClasspathJar", value);
     }
 
     /**
@@ -1542,16 +1318,11 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * <p>
      * Defaults to {@code false}
      *
-     * @param isVerbose {@code true} or {@code false}
+     * @param value {@code true} or {@code false}
      * @return this operation instance
      */
-    public PitestOperation verbose(boolean isVerbose) {
-        if (isVerbose) {
-            options_.put("--verbose", TRUE);
-        } else {
-            options_.put("--verbose", FALSE);
-        }
-        return this;
+    public PitestOperation verbose(boolean value) {
+        return optBool("--verbose", value);
     }
 
     /**
@@ -1563,10 +1334,83 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation verbosity(Verbosity verbosity) {
+        Objects.requireNonNull(verbosity, "verbosity must not be null");
         options_.put("--verbosity", verbosity.name());
         return this;
     }
-}
+
+    /**
+     * Builds the complete classpath from test, compile, and provided classpath jars,
+     * plus the build directories.
+     *
+     * @return the joined classpath string
+     */
+    private String buildClasspath() {
+        // Combine test, compile, and provided classpath jars
+        final String jarClasspath = ClasspathTools.joinClasspath(
+                project_.testClasspathJars(),
+                project_.compileClasspathJars(),
+                project_.providedClasspathJars()
+        );
+
+        // Add build directories to the jar classpath
+        return ClasspathTools.joinClasspath(
+                jarClasspath,
+                project_.buildMainDirectory().getAbsolutePath(),
+                project_.buildTestDirectory().getAbsolutePath()
+        );
+    }
+
+    // --key -> key
+    private String normalizeKey(String key) {
+        return key.startsWith("--") ? key.substring(2) : key;
+    }
+
+    // Stores a non-blank string option.
+    private PitestOperation opt(String key, String value) {
+        ObjectTools.requireNotEmpty(value, "`%s` value must not be null or empty", normalizeKey(key));
+        options_.put(key, value);
+        return this;
+    }
+
+    // Stores a boolean option unconditionally.
+    private PitestOperation optBool(String key, boolean value) {
+        options_.put(key, value ? TRUE : FALSE);
+        return this;
+    }
+
+    // Converts File varargs → absolute-path collection option.
+    private PitestOperation optFiles(String key, Collection<File> files) {
+        ObjectTools.requireNotEmpty(files, "`%s` files must all be non-null", normalizeKey(key));
+        return optJoin(key, files.stream().map(File::getAbsolutePath).toList());
+    }
+
+    // Joins a non-empty collection into a comma-separated option.
+    private PitestOperation optJoin(String key, Collection<String> values) {
+        ObjectTools.requireNotEmpty(values, "`%s` values must all be non-null", normalizeKey(key));
+        int originalSize = values.size();
+
+        var filtered = values.stream()
+                .filter(TextTools::isNotBlank)
+                .toList();
+
+        if (!filtered.isEmpty()) {
+            options_.put(key, String.join(",", filtered));
+        }
+
+        if (filtered.size() < originalSize && LOGGER.isLoggable(Level.WARNING) && !silent()) {
+            LOGGER.warning("Blank values were filtered out from option `" + normalizeKey(key) + "`");
+        }
+        return this;
+    }
+
+    /**
+     * Supported output formats.
+     */
+    public enum OutputFormat {
+        CSV, HTML, XML
+    }
+
     /**
      * Verbosity of output.
      */
@@ -1578,3 +1422,4 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         VERBOSE,
         VERBOSE_NO_SPINNER
     }
+}
