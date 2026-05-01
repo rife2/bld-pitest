@@ -40,14 +40,14 @@ public class PitestOperationBuild extends Project {
         pkg = "rife.bld.extension";
         name = "PIT Mutation Testing";
         archiveBaseName = "bld-pitest";
-        version = version(1, 1, 0, "SNAPSHOT");
+        version = version(1, 1, 0);
 
         javaRelease = 17;
 
         downloadSources = true;
         autoDownloadPurge = true;
 
-        repositories = List.of(MAVEN_CENTRAL, CENTRAL_SNAPSHOTS, RIFE2_RELEASES, MAVEN_LOCAL);
+        repositories = List.of(MAVEN_CENTRAL, CENTRAL_SNAPSHOTS, RIFE2_RELEASES);
 
         var pitest = version(1, 23, 1);
         var junit = version(6, 0, 3);
