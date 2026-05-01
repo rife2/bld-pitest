@@ -16,6 +16,7 @@
 
 package rife.bld.extension;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
 import rife.bld.extension.tools.ClasspathTools;
@@ -40,9 +41,9 @@ import java.util.stream.Collectors;
 public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
 
     private static final String FALSE = Boolean.FALSE.toString();
-    private static final Logger LOGGER = Logger.getLogger(PitestOperation.class.getName());
     private static final String SOURCE_DIRS = "--sourceDirs";
     private static final String TRUE = Boolean.TRUE.toString();
+    private static final Logger logger = Logger.getLogger(PitestOperation.class.getName());
     private final Map<String, String> options_ = new LinkedHashMap<>();
     private BaseProject project_;
 
@@ -70,8 +71,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             }
         });
 
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine(String.join(" ", args));
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine(String.join(" ", args));
         }
 
         return args;
@@ -79,12 +80,15 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
 
     /**
      * Configures the operation from a {@link BaseProject}.
+     * <p>
+     * The {@link #sourceDirs(File...) source directories} will the set the project's source directories
+     * during execution, if not already set.
      *
      * @param project the project to configure the operation from
-     * @since 1.5
+     * @return this operation instance
      */
     @Override
-    public PitestOperation fromProject(BaseProject project) {
+    public PitestOperation fromProject(@NonNull BaseProject project) {
         project_ = Objects.requireNonNull(project, "The project must not be null");
         return this;
     }
@@ -95,7 +99,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param line the line arguments
      * @return this operation instance
      */
-    public PitestOperation argLine(String line) {
+    public PitestOperation argLine(@NonNull String line) {
         return opt("--argLine", line);
     }
 
@@ -118,7 +122,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #avoidCallsTo(String...)
      */
-    public final PitestOperation avoidCallsTo(Collection<String> values) {
+    public final PitestOperation avoidCallsTo(@NonNull Collection<String> values) {
         return optJoin("--avoidCallsTo", values);
     }
 
@@ -141,7 +145,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #avoidCallsTo(Collection)
      */
-    public PitestOperation avoidCallsTo(String... values) {
+    public PitestOperation avoidCallsTo(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "avoidCallsTo values must all be non-null and non-empty");
         return avoidCallsTo(List.of(values));
     }
@@ -155,7 +159,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #classPath(String...)
      */
-    public final PitestOperation classPath(Collection<String> values) {
+    public final PitestOperation classPath(@NonNull Collection<String> values) {
         return optJoin("--classPath", values);
     }
 
@@ -168,7 +172,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #classPath(Collection)
      */
-    public PitestOperation classPath(String... values) {
+    public PitestOperation classPath(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "classPath values must all be non-null and non-empty");
         return classPath(List.of(values));
     }
@@ -182,7 +186,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #classPathFiles(Collection)
      */
-    public PitestOperation classPath(File... values) {
+    public PitestOperation classPath(@NonNull File... values) {
         ObjectTools.requireAllNotEmpty(values, "classPath values must all be non-null");
         return classPathFiles(List.of(values));
     }
@@ -196,7 +200,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #classPathPaths(Collection)
      */
-    public PitestOperation classPath(Path... values) {
+    public PitestOperation classPath(@NonNull Path... values) {
         ObjectTools.requireAllNotEmpty(values, "classPath values must all be non-null");
         return classPathPaths(List.of(values));
     }
@@ -209,7 +213,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPathFile(Path)
      * @see #classPathFile(File)
      */
-    public PitestOperation classPathFile(String file) {
+    public PitestOperation classPathFile(@NonNull String file) {
         return opt("--classPathFile", file);
     }
 
@@ -221,7 +225,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPathFile(Path)
      * @see #classPathFile(File)
      */
-    public PitestOperation classPathFile(File file) {
+    public PitestOperation classPathFile(@NonNull File file) {
         Objects.requireNonNull(file, "classPathFile must not be null");
         return classPathFile(file.getAbsolutePath());
     }
@@ -234,7 +238,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #classPathFile(String)
      * @see #classPathFile(File)
      */
-    public PitestOperation classPathFile(Path path) {
+    public PitestOperation classPathFile(@NonNull Path path) {
         Objects.requireNonNull(path, "classPathFile must not be null");
         return classPathFile(path.toAbsolutePath().toString());
     }
@@ -246,7 +250,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #classPath(File...)
      */
-    public final PitestOperation classPathFiles(Collection<File> values) {
+    public final PitestOperation classPathFiles(@NonNull Collection<File> values) {
         return optFiles("--classPath", values);
     }
 
@@ -257,7 +261,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #classPath(Path...)
      */
-    public final PitestOperation classPathPaths(Collection<Path> values) {
+    public final PitestOperation classPathPaths(@NonNull Collection<Path> values) {
         return optFiles("--classPath", CollectionTools.combinePathsToFiles(values));
     }
 
@@ -269,7 +273,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #configDir(String)
      * @see #configDir(Path)
      */
-    public PitestOperation configDir(File dir) {
+    public PitestOperation configDir(@NonNull File dir) {
         Objects.requireNonNull(dir, "configDir must not be null");
         return configDir(dir.getAbsolutePath());
     }
@@ -282,7 +286,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #configDir(File)
      * @see #configDir(String)
      */
-    public PitestOperation configDir(Path dir) {
+    public PitestOperation configDir(@NonNull Path dir) {
         Objects.requireNonNull(dir, "configDir must not be null");
         return configDir(dir.toFile());
     }
@@ -295,7 +299,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #configDir(Path)
      * @see #configDir(File)
      */
-    public PitestOperation configDir(String dir) {
+    public PitestOperation configDir(@NonNull String dir) {
         return opt("--configDir", dir);
     }
 
@@ -307,11 +311,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation coverageThreshold(int threshold) {
-        if (threshold >= 0 && threshold <= 100) {
-            options_.put("--coverageThreshold", String.valueOf(threshold));
-        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
-            LOGGER.warning("Coverage threshold must be between 0 and 100.");
-        }
+        validateThreshold("Coverage", threshold);
+        options_.put("--coverageThreshold", String.valueOf(threshold));
         return this;
     }
 
@@ -370,7 +371,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedClasses(String...)
      */
-    public final PitestOperation excludedClasses(Collection<String> values) {
+    public final PitestOperation excludedClasses(@NonNull Collection<String> values) {
         return optJoin("--excludedClasses", values);
     }
 
@@ -381,7 +382,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedClasses(Collection)
      */
-    public PitestOperation excludedClasses(String... values) {
+    public PitestOperation excludedClasses(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "excludedClasses values must all be non-null and non-empty");
         return excludedClasses(List.of(values));
     }
@@ -395,7 +396,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedGroups(String...)
      */
-    public final PitestOperation excludedGroups(Collection<String> values) {
+    public final PitestOperation excludedGroups(@NonNull Collection<String> values) {
         return optJoin("--excludedGroups", values);
     }
 
@@ -408,7 +409,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedGroups(Collection)
      */
-    public PitestOperation excludedGroups(String... values) {
+    public PitestOperation excludedGroups(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "excludedGroups values must all be non-null and non-empty");
         return excludedGroups(List.of(values));
     }
@@ -420,7 +421,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedMethods(String...)
      */
-    public final PitestOperation excludedMethods(Collection<String> values) {
+    public final PitestOperation excludedMethods(@NonNull Collection<String> values) {
         return optJoin("--excludedMethods", values);
     }
 
@@ -431,7 +432,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedMethods(Collection)
      */
-    public PitestOperation excludedMethods(String... values) {
+    public PitestOperation excludedMethods(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "excludedMethods values must all be non-null and non-empty");
         return excludedMethods(List.of(values));
     }
@@ -442,7 +443,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param runners the runners
      * @return this operation instance
      */
-    public PitestOperation excludedRunners(String... runners) {
+    public PitestOperation excludedRunners(@NonNull String... runners) {
         ObjectTools.requireAllNotEmpty(runners, "excludedRunners values must all be non-null and non-empty");
         return excludedRunners(List.of(runners));
     }
@@ -453,7 +454,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param runners the runners
      * @return this operation instance
      */
-    public PitestOperation excludedRunners(Collection<String> runners) {
+    public PitestOperation excludedRunners(@NonNull Collection<String> runners) {
         return optJoin("--excludedRunners", runners);
     }
 
@@ -465,7 +466,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedTestClasses(String...)
      */
-    public final PitestOperation excludedTestClasses(Collection<String> values) {
+    public final PitestOperation excludedTestClasses(@NonNull Collection<String> values) {
         return optJoin("--excludedTestClasses", values);
     }
 
@@ -477,7 +478,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #excludedTestClasses(Collection)
      */
-    public PitestOperation excludedTestClasses(String... values) {
+    public PitestOperation excludedTestClasses(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "excludedTestClasses values must all be non-null and non-empty");
         return excludedTestClasses(List.of(values));
     }
@@ -511,7 +512,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #features(String...)
      */
-    public final PitestOperation features(Collection<String> values) {
+    public final PitestOperation features(@NonNull Collection<String> values) {
         return optJoin("--features", values);
     }
 
@@ -522,7 +523,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #features(Collection)
      */
-    public PitestOperation features(String... values) {
+    public PitestOperation features(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "features values must all be non-null and non-empty");
         return features(List.of(values));
     }
@@ -545,7 +546,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #historyInputLocation(File)
      * @see #historyInputLocation(Path)
      */
-    public PitestOperation historyInputLocation(String path) {
+    public PitestOperation historyInputLocation(@NonNull String path) {
         return opt("--historyInputLocation", path);
     }
 
@@ -557,7 +558,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #historyInputLocation(String)
      * @see #historyInputLocation(Path)
      */
-    public PitestOperation historyInputLocation(File path) {
+    public PitestOperation historyInputLocation(@NonNull File path) {
         Objects.requireNonNull(path, "historyInputLocation must not be null");
         return historyInputLocation(path.getAbsolutePath());
     }
@@ -570,7 +571,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #historyInputLocation(String)
      * @see #historyInputLocation(File)
      */
-    public PitestOperation historyInputLocation(Path path) {
+    public PitestOperation historyInputLocation(@NonNull Path path) {
         Objects.requireNonNull(path, "historyInputLocation must not be null");
         return historyInputLocation(path.toFile());
     }
@@ -584,7 +585,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #historyOutputLocation(File)
      * @see #historyOutputLocation(Path)
      */
-    public PitestOperation historyOutputLocation(String path) {
+    public PitestOperation historyOutputLocation(@NonNull String path) {
         return opt("--historyOutputLocation", path);
     }
 
@@ -597,7 +598,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #historyOutputLocation(String)
      * @see #historyOutputLocation(Path)
      */
-    public PitestOperation historyOutputLocation(File path) {
+    public PitestOperation historyOutputLocation(@NonNull File path) {
         Objects.requireNonNull(path, "historyOutputLocation must not be null");
         return historyOutputLocation(path.getAbsolutePath());
     }
@@ -611,7 +612,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #historyOutputLocation(String)
      * @see #historyOutputLocation(File)
      */
-    public PitestOperation historyOutputLocation(Path path) {
+    public PitestOperation historyOutputLocation(@NonNull Path path) {
         Objects.requireNonNull(path, "historyOutputLocation must not be null");
         return historyOutputLocation(path.toFile());
     }
@@ -619,7 +620,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     /**
      * Indicates if the PIT should try to mutate classes on the classpath with which it was launched. If not supplied
      * this flag defaults to {@code true}. If set to {@code false} only classes found on the paths specified by the
-     * {@link #classPath(String...) classPath}
+     * {@link #classPath(String...)  classPath}
      * <p>
      * Defaults to {@code true}
      *
@@ -638,7 +639,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #includedGroups(String...)
      */
-    public final PitestOperation includedGroups(Collection<String> values) {
+    public final PitestOperation includedGroups(@NonNull Collection<String> values) {
         return optJoin("--includedGroups", values);
     }
 
@@ -649,7 +650,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param values one or more included groups
      * @return this operation instance
      */
-    public PitestOperation includedGroups(String... values) {
+    public PitestOperation includedGroups(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "includedGroups values must all be non-null and non-empty");
         return includedGroups(List.of(values));
     }
@@ -660,7 +661,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param testMethod the test methods
      * @return this operation instance
      */
-    public PitestOperation includedTestMethods(String... testMethod) {
+    public PitestOperation includedTestMethods(@NonNull String... testMethod) {
         ObjectTools.requireAllNotEmpty(testMethod,
                 "includedTestMethods values must all be non-null and non-empty");
         return includedTestMethods(List.of(testMethod));
@@ -672,7 +673,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param testMethod the test methods
      * @return this operation instance
      */
-    public PitestOperation includedTestMethods(Collection<String> testMethod) {
+    public PitestOperation includedTestMethods(@NonNull Collection<String> testMethod) {
         return optJoin("--includedTestMethods", testMethod);
     }
 
@@ -684,7 +685,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param encoding the encoding
      * @return this operation instance
      */
-    public PitestOperation inputEncoding(String encoding) {
+    public PitestOperation inputEncoding(@NonNull String encoding) {
         return opt("--inputEncoding", encoding);
     }
 
@@ -696,7 +697,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #jvmArgs(String...)
      */
-    public final PitestOperation jvmArgs(Collection<String> args) {
+    public final PitestOperation jvmArgs(@NonNull Collection<String> args) {
         return optJoin("--jvmArgs", args);
     }
 
@@ -708,7 +709,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #jvmArgs(Collection)
      */
-    public PitestOperation jvmArgs(String... args) {
+    public PitestOperation jvmArgs(@NonNull String... args) {
         ObjectTools.requireAllNotEmpty(args, "jvmArgs values must all be non-null and non-empty");
         return jvmArgs(List.of(args));
     }
@@ -722,7 +723,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmPath(File)
      * @see #jvmPath(Path)
      */
-    public PitestOperation jvmPath(String path) {
+    public PitestOperation jvmPath(@NonNull String path) {
         return opt("--jvmPath", path);
     }
 
@@ -735,7 +736,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmPath(Path)
      * @see #jvmPath(String)
      */
-    public PitestOperation jvmPath(File path) {
+    public PitestOperation jvmPath(@NonNull File path) {
         Objects.requireNonNull(path, "jvmPath must not be null");
         return jvmPath(path.getAbsolutePath());
     }
@@ -749,7 +750,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #jvmPath(File)
      * @see #jvmPath(String)
      */
-    public PitestOperation jvmPath(Path path) {
+    public PitestOperation jvmPath(@NonNull Path path) {
         Objects.requireNonNull(path, "jvmPath must not be null");
         return jvmPath(path.toFile());
     }
@@ -790,7 +791,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutableCodePaths(String...)
      */
-    public final PitestOperation mutableCodePaths(Collection<String> values) {
+    public final PitestOperation mutableCodePaths(@NonNull Collection<String> values) {
         return optJoin("--mutableCodePaths", values);
     }
 
@@ -808,7 +809,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutableCodePaths(Collection)
      */
-    public PitestOperation mutableCodePaths(String... values) {
+    public PitestOperation mutableCodePaths(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "mutableCodePaths values must all be non-null and non-empty");
         return mutableCodePaths(List.of(values));
     }
@@ -827,7 +828,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutableCodePathsFiles(Collection)
      */
-    public PitestOperation mutableCodePaths(File... values) {
+    public PitestOperation mutableCodePaths(@NonNull File... values) {
         ObjectTools.requireAllNotEmpty(values, "mutableCodePaths values must all be non-null");
         return mutableCodePathsFiles(List.of(values));
     }
@@ -846,7 +847,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutableCodePathsPaths(Collection)
      */
-    public PitestOperation mutableCodePaths(Path... values) {
+    public PitestOperation mutableCodePaths(@NonNull Path... values) {
         ObjectTools.requireAllNotEmpty(values, "mutableCodePaths values must all be non-null");
         return mutableCodePathsPaths(List.of(values));
     }
@@ -865,7 +866,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutableCodePaths(File...)
      */
-    public final PitestOperation mutableCodePathsFiles(Collection<File> values) {
+    public final PitestOperation mutableCodePathsFiles(@NonNull Collection<File> values) {
         return optFiles("--mutableCodePaths", values);
     }
 
@@ -883,7 +884,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutableCodePaths(Path...)
      */
-    public final PitestOperation mutableCodePathsPaths(Collection<Path> values) {
+    public final PitestOperation mutableCodePathsPaths(@NonNull Collection<Path> values) {
         return optFiles("--mutableCodePaths", CollectionTools.combinePathsToFiles(values));
     }
 
@@ -895,7 +896,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param engine the engine
      * @return this operation instance
      */
-    public PitestOperation mutationEngine(String engine) {
+    public PitestOperation mutationEngine(@NonNull String engine) {
         return opt("--mutationEngine", engine);
     }
 
@@ -910,11 +911,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation mutationThreshold(int threshold) {
-        if (threshold >= 0 && threshold <= 100) {
-            options_.put("--mutationThreshold", String.valueOf(threshold));
-        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
-            LOGGER.warning("Mutation threshold must be between 0 and 100.");
-        }
+        validateThreshold("Mutation", threshold);
+        options_.put("--mutationThreshold", String.valueOf(threshold));
         return this;
     }
 
@@ -936,7 +934,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutators(String...)
      */
-    public final PitestOperation mutators(Collection<String> values) {
+    public final PitestOperation mutators(@NonNull Collection<String> values) {
         return optJoin("--mutators", values);
     }
 
@@ -947,7 +945,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #mutators(Collection)
      */
-    public PitestOperation mutators(String... values) {
+    public PitestOperation mutators(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "mutators values must all be non-null and non-empty");
         return mutators(List.of(values));
     }
@@ -955,9 +953,9 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     /**
      * Returns the PIT options.
      *
-     * @return the map of options
+     * @return the mutable map of options
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "intentional and documented")
     public Map<String, String> options() {
         return options_;
     }
@@ -970,7 +968,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param encoding the encoding
      * @return this operation instance
      */
-    public PitestOperation outputEncoding(String encoding) {
+    public PitestOperation outputEncoding(@NonNull String encoding) {
         return opt("--outputEncoding", encoding);
     }
 
@@ -984,7 +982,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param formats one or more output formats
      * @return this operation instance
      */
-    public PitestOperation outputFormats(OutputFormat... formats) {
+    public PitestOperation outputFormats(@NonNull OutputFormat... formats) {
         ObjectTools.requireAllNotEmpty(formats, "outputFormats must not be null");
         options_.put("--outputFormats",
                 Arrays.stream(formats).map(Enum::name).distinct().collect(Collectors.joining(",")));
@@ -997,7 +995,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @param configuration the configuration keys and values
      * @return this operation instance
      */
-    public PitestOperation pluginConfiguration(Map<String, String> configuration) {
+    public PitestOperation pluginConfiguration(@NonNull Map<String, String> configuration) {
         ObjectTools.requireAllNotEmpty(configuration,
                 "pluginConfiguration keys and values must be non-null and non-empty");
         var joined = configuration.entrySet().stream()
@@ -1015,7 +1013,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #projectBase(File)
      * @see #projectBase(Path)
      */
-    public PitestOperation projectBase(String file) {
+    public PitestOperation projectBase(@NonNull String file) {
         return opt("--projectBase", file);
     }
 
@@ -1027,7 +1025,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #projectBase(String)
      * @see #projectBase(Path)
      */
-    public PitestOperation projectBase(File file) {
+    public PitestOperation projectBase(@NonNull File file) {
         Objects.requireNonNull(file, "projectBase must not be null");
         return projectBase(file.getAbsolutePath());
     }
@@ -1040,7 +1038,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #projectBase(String)
      * @see #projectBase(File)
      */
-    public PitestOperation projectBase(Path file) {
+    public PitestOperation projectBase(@NonNull Path file) {
         Objects.requireNonNull(file, "projectBase must not be null");
         return projectBase(file.toFile());
     }
@@ -1053,7 +1051,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #reportDir(File)
      * @see #reportDir(Path)
      */
-    public PitestOperation reportDir(String dir) {
+    public PitestOperation reportDir(@NonNull String dir) {
         return opt("--reportDir", dir);
     }
 
@@ -1065,7 +1063,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #reportDir(String)
      * @see #reportDir(Path)
      */
-    public PitestOperation reportDir(File dir) {
+    public PitestOperation reportDir(@NonNull File dir) {
         Objects.requireNonNull(dir, "reportDir must not be null");
         return reportDir(dir.getAbsolutePath());
     }
@@ -1078,7 +1076,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @see #reportDir(String)
      * @see #reportDir(File)
      */
-    public PitestOperation reportDir(Path dir) {
+    public PitestOperation reportDir(@NonNull Path dir) {
         Objects.requireNonNull(dir, "reportDir must not be null");
         return reportDir(dir.toFile());
     }
@@ -1102,7 +1100,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(Collection)
      */
-    public PitestOperation sourceDirs(String... dirs) {
+    public PitestOperation sourceDirs(@NonNull String... dirs) {
         ObjectTools.requireAllNotEmpty(dirs, "sourceDirs values must all be non-null and non-empty");
         return sourceDirs(List.of(dirs));
     }
@@ -1114,7 +1112,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirsFiles(Collection)
      */
-    public PitestOperation sourceDirs(File... dirs) {
+    public PitestOperation sourceDirs(@NonNull File... dirs) {
         ObjectTools.requireAllNotEmpty(dirs, "sourceDirs values must all be non-null");
         return sourceDirsFiles(List.of(dirs));
     }
@@ -1126,7 +1124,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirsPaths(Collection)
      */
-    public PitestOperation sourceDirs(Path... dirs) {
+    public PitestOperation sourceDirs(@NonNull Path... dirs) {
         ObjectTools.requireAllNotEmpty(dirs, "sourceDirs values must all be non-null");
         return sourceDirsPaths(List.of(dirs));
     }
@@ -1138,7 +1136,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(String...)
      */
-    public final PitestOperation sourceDirs(Collection<String> dirs) {
+    public final PitestOperation sourceDirs(@NonNull Collection<String> dirs) {
         return optJoin(SOURCE_DIRS, dirs);
     }
 
@@ -1149,7 +1147,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(File...)
      */
-    public final PitestOperation sourceDirsFiles(Collection<File> dirs) {
+    public final PitestOperation sourceDirsFiles(@NonNull Collection<File> dirs) {
         return optFiles(SOURCE_DIRS, dirs);
     }
 
@@ -1160,7 +1158,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #sourceDirs(Path...)
      */
-    public final PitestOperation sourceDirsPaths(Collection<Path> dirs) {
+    public final PitestOperation sourceDirsPaths(@NonNull Collection<Path> dirs) {
         return optFiles(SOURCE_DIRS, CollectionTools.combinePathsToFiles(dirs));
     }
 
@@ -1177,7 +1175,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #targetClasses(String...)
      */
-    public final PitestOperation targetClasses(Collection<String> values) {
+    public final PitestOperation targetClasses(@NonNull Collection<String> values) {
         return optJoin("--targetClasses", values);
     }
 
@@ -1194,7 +1192,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #targetClasses(Collection)
      */
-    public PitestOperation targetClasses(String... values) {
+    public PitestOperation targetClasses(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "targetClasses values must all be non-null and non-empty");
         return targetClasses(List.of(values));
     }
@@ -1211,7 +1209,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #targetTests(String...)
      */
-    public final PitestOperation targetTests(Collection<String> values) {
+    public final PitestOperation targetTests(@NonNull Collection<String> values) {
         return optJoin("--targetTests", values);
     }
 
@@ -1227,7 +1225,7 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      * @see #targetTests(Collection)
      */
-    public PitestOperation targetTests(String... values) {
+    public PitestOperation targetTests(@NonNull String... values) {
         ObjectTools.requireAllNotEmpty(values, "targetTests values must all be non-null and non-empty");
         return targetTests(List.of(values));
     }
@@ -1241,11 +1239,8 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
      * @return this operation instance
      */
     public PitestOperation testStrengthThreshold(int threshold) {
-        if (threshold >= 0 && threshold <= 100) {
-            options_.put("--testStrengthThreshold", String.valueOf(threshold));
-        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
-            LOGGER.warning("Test strength threshold must be between 0 and 100.");
-        }
+        validateThreshold("Test strength", threshold);
+        options_.put("--testStrengthThreshold", String.valueOf(threshold));
         return this;
     }
 
@@ -1339,14 +1334,12 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
         return this;
     }
 
-    /**
-     * Builds the complete classpath from test, compile, and provided classpath jars,
+    /*
+     * Builds the complete classpath from test and compile classpath jars,
      * plus the build directories.
-     *
-     * @return the joined classpath string
      */
     private String buildClasspath() {
-        // Combine test, compile, and provided classpath jars
+        // Combine test & compile classpath jars
         final String jarClasspath = ClasspathTools.joinClasspath(
                 project_.testClasspathJars(),
                 project_.compileClasspathJars(),
@@ -1362,31 +1355,31 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
     }
 
     // --key -> key
-    private String normalizeKey(String key) {
+    private String normalizeKey(@NonNull String key) {
         return key.startsWith("--") ? key.substring(2) : key;
     }
 
-    // Stores a non-blank string option.
-    private PitestOperation opt(String key, String value) {
+    // Stores a non-blank string option
+    private PitestOperation opt(@NonNull String key, String value) {
         ObjectTools.requireNotEmpty(value, "`%s` value must not be null or empty", normalizeKey(key));
         options_.put(key, value);
         return this;
     }
 
-    // Stores a boolean option unconditionally.
-    private PitestOperation optBool(String key, boolean value) {
+    // Stores a boolean option unconditionally
+    private PitestOperation optBool(@NonNull String key, boolean value) {
         options_.put(key, value ? TRUE : FALSE);
         return this;
     }
 
-    // Converts File varargs → absolute-path collection option.
-    private PitestOperation optFiles(String key, Collection<File> files) {
+    // Converts File varargs → absolute-path collection option
+    private PitestOperation optFiles(@NonNull String key, Collection<File> files) {
         ObjectTools.requireNotEmpty(files, "`%s` files must all be non-null", normalizeKey(key));
         return optJoin(key, files.stream().map(File::getAbsolutePath).toList());
     }
 
-    // Joins a non-empty collection into a comma-separated option.
-    private PitestOperation optJoin(String key, Collection<String> values) {
+    // Joins a non-empty collection into a comma-separated option
+    private PitestOperation optJoin(@NonNull String key, Collection<String> values) {
         ObjectTools.requireNotEmpty(values, "`%s` values must all be non-null", normalizeKey(key));
         int originalSize = values.size();
 
@@ -1398,28 +1391,64 @@ public class PitestOperation extends AbstractProcessOperation<PitestOperation> {
             options_.put(key, String.join(",", filtered));
         }
 
-        if (filtered.size() < originalSize && LOGGER.isLoggable(Level.WARNING) && !silent()) {
-            LOGGER.warning("Blank values were filtered out from option `" + normalizeKey(key) + "`");
+        if (filtered.size() < originalSize && logger.isLoggable(Level.WARNING) && !silent()) {
+            logger.warning("Blank values were filtered out from option `" + normalizeKey(key) + "`");
         }
         return this;
+    }
+
+    // Validates a threshold (must be < 0 or > 100)
+    private void validateThreshold(String label, int threshold) {
+        if (threshold < 0 || threshold > 100) {
+            throw new IllegalArgumentException(label + " threshold must be between 0 and 100.");
+        }
     }
 
     /**
      * Supported output formats.
      */
     public enum OutputFormat {
-        CSV, HTML, XML
+        /**
+         * CSV: Machine-readable format; like {@link #XML}, it only contains mutation results.
+         */
+        CSV,
+        /**
+         * HTML: Default format; includes line coverage data.
+         */
+        HTML,
+        /**
+         * XML: Machine-readable format; does not contain information about uncovered lines, only mutation results.
+         */
+        XML
     }
 
     /**
      * Verbosity of output.
      */
     public enum Verbosity {
+        /**
+         * No minion output capture, spinner is shown, logs at the info level.
+         */
         DEFAULT,
+        /**
+         * No minion output capture, no spinner, logs at the info level (default).
+         */
         NO_SPINNER,
+        /**
+         * No minion output capture, no spinner, only severe errors are logged.
+         */
         QUIET,
+        /**
+         * No minion output capture, spinner is shown, only severe errors are logged.
+         */
         QUIET_WITH_PROGRESS,
+        /**
+         * Captures minion output, no spinner, logs at the detailed level.
+         */
         VERBOSE,
+        /**
+         * Captures minion output, spinner is shown, logs at the detailed level.
+         */
         VERBOSE_NO_SPINNER
     }
 }

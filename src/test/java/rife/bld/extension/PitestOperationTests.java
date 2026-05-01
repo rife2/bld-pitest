@@ -17,6 +17,7 @@
 package rife.bld.extension;
 
 import org.assertj.core.api.AutoCloseableSoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,9 +31,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import rife.bld.BaseProject;
 import rife.bld.Project;
 import rife.bld.WebProject;
+import rife.bld.blueprints.BaseProjectBlueprint;
 import rife.bld.extension.testing.LoggingExtension;
 import rife.bld.extension.testing.TestLogHandler;
-import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,22 +51,26 @@ import static org.assertj.core.api.Assertions.*;
 class PitestOperationTests {
 
     private static final String BAR = "bar";
-    private static final File BAR_FILE = new File(BAR);
     private static final String FALSE = Boolean.FALSE.toString();
     private static final String FOO = "foo";
     private static final String FOOBAR = FOO + ',' + BAR;
-    private static final File FOO_FILE = new File(FOO);
-    private static final String FOOBAR_FORMAT =
-            String.format("%s,%s", FOO_FILE.getAbsolutePath(), BAR_FILE.getAbsolutePath());
-    private static final TestLogHandler TEST_LOG_HANDLER = new TestLogHandler();
-
+    private static final String TRUE = Boolean.TRUE.toString();
+    private static final File barFile = new File(BAR);
+    private static final File fooFile = new File(FOO);
+    private static final String fooBarFormat =
+            String.format("%s,%s", fooFile.getAbsolutePath(), barFile.getAbsolutePath());
+    private static final TestLogHandler testLogHandler = new TestLogHandler();
     @RegisterExtension
     @SuppressWarnings({"LoggerInitializedWithForeignClass", "unused"})
-    private static final LoggingExtension LOGGING_EXTENSION = new LoggingExtension(
+    private static final LoggingExtension loggingExtensions = new LoggingExtension(
             Logger.getLogger(PitestOperation.class.getName()),
-            TEST_LOG_HANDLER
+            testLogHandler
     );
-    private static final String TRUE = Boolean.TRUE.toString();
+
+    @BeforeEach
+    void setup() {
+        testLogHandler.clear();
+    }
 
     @Nested
     @DisplayName("Execute Tests")
@@ -77,17 +82,22 @@ class PitestOperationTests {
 
         @Test
         void execute() {
-            var op = new PitestOperation().
-                    fromProject(new WebProject())
+            var proj = new BaseProjectBlueprint(
+                    new File("examples"),
+                    "com.example",
+                    "Examples",
+                    "Examples");
+            var op = new PitestOperation()
+                    .fromProject(proj)
                     .reportDir(tmpDir)
                     .targetClasses("com.example.*")
                     .targetTests("com.example.*")
                     .verbose(false)
-                    .failWhenNoMutations(false)
-                    .sourceDirs("examples/src");
+                    .failWhenNoMutations(false);
 
             assertThatCode(op::execute).doesNotThrowAnyException();
-            assertThat(tmpDir).isEmptyDirectory();
+            assertThat(testLogHandler.containsMessage("Sent tests to minion"));
+            assertThat(tmpDir).isNotEmptyDirectory();
         }
 
         @Test
@@ -105,8 +115,11 @@ class PitestOperationTests {
                     "--targetClasses com.your.package.tobemutated*",
                     "--targetTests com.your.package.*",
                     "--sourceDirs parthsource");
+        }
 
-            op = new PitestOperation()
+        @Test
+        void executeConstructProcessCommandListWindows() {
+            var op = new PitestOperation()
                     .fromProject(new BaseProject())
                     .reportDir("c:\\mutationReports")
                     .targetClasses("example.foo.*")
@@ -130,6 +143,11 @@ class PitestOperationTests {
             var op = new PitestOperation();
             assertThatCode(op::execute).isInstanceOf(NullPointerException.class);
         }
+    }
+
+    @Nested
+    @DisplayName("Export Line Coverage Tests")
+    class ExportLineCoverageTests {
 
         @Test
         void exportLineCoverageIsFalse() {
@@ -248,16 +266,16 @@ class PitestOperationTests {
         void configDirAsFile() {
             var op = new PitestOperation()
                     .fromProject(new BaseProject())
-                    .configDir(FOO_FILE);
-            assertThat(op.options().get("--configDir")).isEqualTo(FOO_FILE.getAbsolutePath());
+                    .configDir(fooFile);
+            assertThat(op.options().get("--configDir")).isEqualTo(fooFile.getAbsolutePath());
         }
 
         @Test
         void configDirAsPath() {
             var op = new PitestOperation()
                     .fromProject(new BaseProject())
-                    .configDir(FOO_FILE.toPath());
-            assertThat(op.options().get("--configDir")).isEqualTo(FOO_FILE.getAbsolutePath());
+                    .configDir(fooFile.toPath());
+            assertThat(op.options().get("--configDir")).isEqualTo(fooFile.getAbsolutePath());
         }
 
         @Test
@@ -270,20 +288,18 @@ class PitestOperationTests {
 
         @Test
         void coverageThresholdOutOfBounds() {
-            var op = new PitestOperation()
-                    .fromProject(new BaseProject())
-                    .coverageThreshold(101);
-            assertThat(op.options().get("--coverageThreshold")).isNull();
-            assertThat(TEST_LOG_HANDLER.containsMessage("0 and 100")).isTrue();
-            TEST_LOG_HANDLER.clear();
+            var op = new PitestOperation().fromProject(new BaseProject());
+            assertThatThrownBy(() -> op.coverageThreshold(101))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Coverage");
         }
 
         @Test
         void coverageThresholdOutOfBoundsNegative() {
-            var op = new PitestOperation()
-                    .fromProject(new BaseProject())
-                    .coverageThreshold(-1);
-            assertThat(op.options().get("--coverageThreshold")).isNull();
+            var op = new PitestOperation().fromProject(new BaseProject());
+            assertThatThrownBy(() -> op.coverageThreshold(-1))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Coverage");
         }
 
         @Test
@@ -355,14 +371,14 @@ class PitestOperationTests {
 
         @Test
         void projectBaseAsFile() {
-            var op = new PitestOperation().projectBase(FOO_FILE);
-            assertThat(op.options().get("--projectBase")).isEqualTo(FOO_FILE.getAbsolutePath());
+            var op = new PitestOperation().projectBase(fooFile);
+            assertThat(op.options().get("--projectBase")).isEqualTo(fooFile.getAbsolutePath());
         }
 
         @Test
         void projectBaseAsPath() {
-            var op = new PitestOperation().projectBase(FOO_FILE.toPath());
-            assertThat(op.options().get("--projectBase")).isEqualTo(FOO_FILE.getAbsolutePath());
+            var op = new PitestOperation().projectBase(fooFile.toPath());
+            assertThat(op.options().get("--projectBase")).isEqualTo(fooFile.getAbsolutePath());
         }
 
         @Test
@@ -387,6 +403,23 @@ class PitestOperationTests {
                     .fromProject(new Project())
                     .testStrengthThreshold(6);
             assertThat(op.options().get("--testStrengthThreshold")).isEqualTo("6");
+        }
+
+        @Test
+        void strengthThresholdOutOfBounds() {
+            var op = new PitestOperation().fromProject(new BaseProject());
+            assertThatThrownBy(() -> op.testStrengthThreshold(101))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Test strength");
+
+        }
+
+        @Test
+        void strengthThresholdOutOfBoundsNegative() {
+            var op = new PitestOperation().fromProject(new BaseProject());
+            assertThatThrownBy(() -> op.testStrengthThreshold(-1))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Test strength");
         }
 
         @Test
@@ -452,20 +485,20 @@ class PitestOperationTests {
 
             @Test
             void classPath() {
-                var op = new PitestOperation().classPath(FOO_FILE.toPath(), BAR_FILE.toPath());
-                assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().classPath(fooFile.toPath(), barFile.toPath());
+                assertThat(op.options().get(CLASS_PATH)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void classPathAsFileArray() {
-                var op = new PitestOperation().classPath(FOO_FILE, BAR_FILE);
-                assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().classPath(fooFile, barFile);
+                assertThat(op.options().get(CLASS_PATH)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void classPathAsFileList() {
-                var op = new PitestOperation().classPathFiles(List.of(FOO_FILE, BAR_FILE));
-                assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().classPathFiles(List.of(fooFile, barFile));
+                assertThat(op.options().get(CLASS_PATH)).isEqualTo(fooBarFormat);
             }
 
             @Test
@@ -478,8 +511,8 @@ class PitestOperationTests {
 
             @Test
             void classPathAsStringList() {
-                var op = new PitestOperation().classPathPaths(List.of(FOO_FILE.toPath(), BAR_FILE.toPath()));
-                assertThat(op.options().get(CLASS_PATH)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().classPathPaths(List.of(fooFile.toPath(), barFile.toPath()));
+                assertThat(op.options().get(CLASS_PATH)).isEqualTo(fooBarFormat);
             }
 
             @Test
@@ -494,16 +527,16 @@ class PitestOperationTests {
             void classPathFileAsFile() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
-                        .classPathFile(FOO_FILE);
-                assertThat(op.options().get("--classPathFile")).isEqualTo(FOO_FILE.getAbsolutePath());
+                        .classPathFile(fooFile);
+                assertThat(op.options().get("--classPathFile")).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
             void classPathFileAsPath() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
-                        .classPathFile(FOO_FILE.toPath());
-                assertThat(op.options().get("--classPathFile")).isEqualTo(FOO_FILE.getAbsolutePath());
+                        .classPathFile(fooFile.toPath());
+                assertThat(op.options().get("--classPathFile")).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
@@ -528,7 +561,7 @@ class PitestOperationTests {
 
             @Test
             void classPathWithNull() {
-                assertThatThrownBy(() -> new PitestOperation().classPath(FOO_FILE, null))
+                assertThatThrownBy(() -> new PitestOperation().classPath(fooFile, null))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("non-null");
             }
@@ -744,14 +777,14 @@ class PitestOperationTests {
 
             @Test
             void historyInputLocationAsFile() {
-                op.historyInputLocation(FOO_FILE);
-                assertThat(op.options().get(historyInputLocation)).isEqualTo(FOO_FILE.getAbsolutePath());
+                op.historyInputLocation(fooFile);
+                assertThat(op.options().get(historyInputLocation)).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
             void historyInputLocationAsPath() {
-                var op = new PitestOperation().historyInputLocation(FOO_FILE.toPath());
-                assertThat(op.options().get(historyInputLocation)).isEqualTo(FOO_FILE.getAbsolutePath());
+                var op = new PitestOperation().historyInputLocation(fooFile.toPath());
+                assertThat(op.options().get(historyInputLocation)).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
@@ -764,8 +797,8 @@ class PitestOperationTests {
             void historyOutputLocationAsPath() {
                 var op = new PitestOperation()
                         .fromProject(new BaseProject())
-                        .historyOutputLocation(FOO_FILE.toPath());
-                assertThat(op.options().get(historyOutputLocation)).isEqualTo(FOO_FILE.getAbsolutePath());
+                        .historyOutputLocation(fooFile.toPath());
+                assertThat(op.options().get(historyOutputLocation)).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
@@ -899,14 +932,14 @@ class PitestOperationTests {
 
             @Test
             void jvmPathAsFile() {
-                var op = new PitestOperation().jvmPath(FOO_FILE);
-                assertThat(op.options().get("--jvmPath")).isEqualTo(FOO_FILE.getAbsolutePath());
+                var op = new PitestOperation().jvmPath(fooFile);
+                assertThat(op.options().get("--jvmPath")).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
             void jvmPathAsPath() {
-                var op = new PitestOperation().jvmPath(FOO_FILE.toPath());
-                assertThat(op.options().get("--jvmPath")).isEqualTo(FOO_FILE.getAbsolutePath());
+                var op = new PitestOperation().jvmPath(fooFile.toPath());
+                assertThat(op.options().get("--jvmPath")).isEqualTo(fooFile.getAbsolutePath());
             }
         }
 
@@ -924,26 +957,26 @@ class PitestOperationTests {
 
             @Test
             void mutableCodePathsAsFileArray() {
-                var op = new PitestOperation().mutableCodePaths(FOO_FILE, BAR_FILE);
-                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().mutableCodePaths(fooFile, barFile);
+                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void mutableCodePathsAsFileList() {
-                var op = new PitestOperation().mutableCodePathsFiles(List.of(FOO_FILE, BAR_FILE));
-                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().mutableCodePathsFiles(List.of(fooFile, barFile));
+                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void mutableCodePathsAsPathArray() {
-                var op = new PitestOperation().mutableCodePaths(FOO_FILE.toPath(), BAR_FILE.toPath());
-                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().mutableCodePaths(fooFile.toPath(), barFile.toPath());
+                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void mutableCodePathsAsPathList() {
-                var op = new PitestOperation().mutableCodePathsPaths(List.of(FOO_FILE.toPath(), BAR_FILE.toPath()));
-                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().mutableCodePathsPaths(List.of(fooFile.toPath(), barFile.toPath()));
+                assertThat(op.options().get(MUTABLE_CODE_PATHS)).isEqualTo(fooBarFormat);
             }
 
             @Test
@@ -1025,18 +1058,19 @@ class PitestOperationTests {
 
             @Test
             void mutationThresholdOutOfBounds() {
-                var op = new PitestOperation()
-                        .fromProject(new BaseProject())
-                        .mutationThreshold(101);
-                assertThat(op.options().get("--mutationThreshold")).isNull();
+                var op = new PitestOperation().fromProject(new BaseProject());
+                assertThatThrownBy(() -> op.mutationThreshold(101))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Mutation");
+
             }
 
             @Test
             void mutationThresholdOutOfBoundsNegative() {
-                var op = new PitestOperation()
-                        .fromProject(new BaseProject())
-                        .mutationThreshold(-1);
-                assertThat(op.options().get("--mutationThreshold")).isNull();
+                var op = new PitestOperation().fromProject(new BaseProject());
+                assertThatThrownBy(() -> op.mutationThreshold(-1))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Mutation");
             }
 
             @Test
@@ -1121,14 +1155,14 @@ class PitestOperationTests {
 
             @Test
             void reportDirAsFile() {
-                var op = new PitestOperation().reportDir(FOO_FILE);
-                assertThat(op.options().get(REPORT_DIR)).isEqualTo(FOO_FILE.getAbsolutePath());
+                var op = new PitestOperation().reportDir(fooFile);
+                assertThat(op.options().get(REPORT_DIR)).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
             void reportDirAsPath() {
-                var op = new PitestOperation().reportDir(FOO_FILE.toPath());
-                assertThat(op.options().get(REPORT_DIR)).isEqualTo(FOO_FILE.getAbsolutePath());
+                var op = new PitestOperation().reportDir(fooFile.toPath());
+                assertThat(op.options().get(REPORT_DIR)).isEqualTo(fooFile.getAbsolutePath());
             }
 
             @Test
@@ -1152,26 +1186,26 @@ class PitestOperationTests {
 
             @Test
             void sourceDirsAsFileArray() {
-                var op = new PitestOperation().sourceDirs(FOO_FILE, BAR_FILE);
-                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().sourceDirs(fooFile, barFile);
+                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void sourceDirsAsFileList() {
-                var op = new PitestOperation().sourceDirsFiles(List.of(FOO_FILE, BAR_FILE));
-                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().sourceDirsFiles(List.of(fooFile, barFile));
+                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void sourceDirsAsPathArray() {
-                var op = new PitestOperation().sourceDirs(FOO_FILE.toPath(), BAR_FILE.toPath());
-                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().sourceDirs(fooFile.toPath(), barFile.toPath());
+                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(fooBarFormat);
             }
 
             @Test
             void sourceDirsAsPathList() {
-                var op = new PitestOperation().sourceDirsPaths(List.of(FOO_FILE.toPath(), BAR_FILE.toPath()));
-                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(FOOBAR_FORMAT);
+                var op = new PitestOperation().sourceDirsPaths(List.of(fooFile.toPath(), barFile.toPath()));
+                assertThat(op.options().get(SOURCE_DIRS)).isEqualTo(fooBarFormat);
             }
 
             @Test
